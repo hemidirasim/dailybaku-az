@@ -18,7 +18,7 @@ async function getPage(slug: string, locale: string) {
   });
 
   if (pageTranslation && pageTranslation.page.isActive) {
-    const translation = pageTranslation.page.translations.find((t) => t.locale === locale);
+    const translation = pageTranslation.page.translations.find((t: { locale: string }) => t.locale === locale);
     return {
       ...pageTranslation.page,
       title: translation?.title || '',
@@ -36,7 +36,7 @@ async function getPage(slug: string, locale: string) {
 
   if (!page || !page.isActive) return null;
 
-  const translation = page.translations.find((t) => t.locale === locale);
+  const translation = page.translations.find((t: { locale: string }) => t.locale === locale);
   return {
     ...page,
     title: translation?.title || '',
