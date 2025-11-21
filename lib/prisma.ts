@@ -6,14 +6,29 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Only check DATABASE_URL at runtime, not during build
-function getPrismaClient() {
-  if (!process.env.DATABASE_URL) {
+// Lazy initialization - only create client when actually used
+function getPrismaClient(): PrismaClient {
+  const databaseUrl = process.env.DATABASE_URL;
+  
+  // During build phase, allow build to continue without DATABASE_URL
+  // The actual error will occur at runtime when Prisma is used
+  if (!databaseUrl) {
+    // Check if we're in build phase
+    if (process.env.NEXT_PHASE === 'phase-production-build' || 
+        process.env.NEXT_PHASE === 'phase-development-build' ||
+        !process.env.NEXT_RUNTIME) {
+      // Return a proxy that will throw error when methods are called
+      return new Proxy({} as PrismaClient, {
+        get() {
+          throw new Error('DATABASE_URL environment variable is not set. Please configure it in your environment variables.');
+        }
+      });
+    }
     throw new Error('DATABASE_URL environment variable is not set');
   }
 
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: databaseUrl,
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
@@ -27,8 +42,15 @@ function getPrismaClient() {
   });
 }
 
-export const prisma =
-  globalForPrisma.prisma ?? getPrismaClient();
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// Use getter to defer initialization
+export const prisma: PrismaClient = (() => {
+  if (globalForPrisma.prisma) {
+    return globalForPrisma.prisma;
+  }
+  const client = getPrismaClient();
+  if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = client;
+  }
+  return client;
+})();
 
