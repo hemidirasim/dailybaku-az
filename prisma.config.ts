@@ -9,7 +9,8 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: env("DATABASE_URL") || "postgresql://dailybaku_user:RMSKSYcLqNzawhuNhP9Lf65PB@68.183.173.136:5432/dailybaku?schema=public",
+    // DATABASE_URL is optional for prisma generate, required for migrate/db push
+    url: env("DATABASE_URL", { optional: true }) || "postgresql://dailybaku_user:RMSKSYcLqNzawhuNhP9Lf65PB@68.183.173.136:5432/dailybaku?schema=public",
   },
 });
 
