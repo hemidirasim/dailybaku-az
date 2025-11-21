@@ -54,7 +54,7 @@ export default async function AdvertisementsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              advertisements.map((ad) => (
+              advertisements.map((ad: typeof advertisements[0]) => (
                 <TableRow key={ad.id}>
                   <TableCell>
                     <Badge variant={ad.type === 'image' ? 'default' : 'secondary'}>
