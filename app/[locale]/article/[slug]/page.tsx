@@ -208,8 +208,8 @@ export default async function ArticlePage({
             {article.images && article.images.length > 1 && (
               <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4">
                 {article.images
-                  .filter((img) => !img.isPrimary)
-                  .map((image) => (
+                  .filter((img: { isPrimary: boolean }) => !img.isPrimary)
+                  .map((image: { id: string; url: string; alt?: string | null; caption?: string | null }) => (
                     <div key={image.id} className="relative aspect-video rounded-lg overflow-hidden">
                       <Image
                         src={image.url}
