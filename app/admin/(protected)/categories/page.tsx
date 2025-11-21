@@ -47,9 +47,9 @@ export default async function CategoriesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {categories.map((category) => {
-              const azTranslation = category.translations.find((t) => t.locale === 'az');
-              const enTranslation = category.translations.find((t) => t.locale === 'en');
+            {categories.map((category: typeof categories[0]) => {
+              const azTranslation = category.translations.find((t: { locale: string }) => t.locale === 'az');
+              const enTranslation = category.translations.find((t: { locale: string }) => t.locale === 'en');
 
               return (
                 <TableRow key={category.id}>
