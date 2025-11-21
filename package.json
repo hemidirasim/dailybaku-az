@@ -7,7 +7,7 @@
     "npm": ">=10.0.0"
   },
   "scripts": {
-    "postinstall": "prisma generate",
+    "postinstall": "PRISMA_SKIP_CONFIG=1 prisma generate || prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
