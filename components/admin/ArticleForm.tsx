@@ -394,7 +394,7 @@ export default function ArticleForm({ article, categories = [], users = [] }: Ar
     }
   };
 
-  const onSubmit = async (data: ArticleFormData, status: 'draft' | 'published' = 'published') => {
+  const onSubmit = async (data: ArticleFormData) => {
     setLoading(true);
     try {
       const url = article ? `/api/admin/articles/${article.id}` : '/api/admin/articles';
@@ -403,7 +403,7 @@ export default function ArticleForm({ article, categories = [], users = [] }: Ar
       // Slug'ları otomatik oluştur (eğer boşsa)
       const processedData = {
         ...data,
-        status: status, // Status parametrindən gəlir
+        status: data.status || 'published', // Status form data-dan gəlir
         authorId: data.authorId || null,
         az: {
           ...data.az,
@@ -442,7 +442,7 @@ export default function ArticleForm({ article, categories = [], users = [] }: Ar
       }
 
       toast.success(
-        status === 'draft'
+        processedData.status === 'draft'
           ? (article ? 'Qaralama yeniləndi' : 'Qaralama yaradıldı')
           : (article ? 'Xəbər yeniləndi' : 'Xəbər yaradıldı')
       );
@@ -684,7 +684,10 @@ export default function ArticleForm({ article, categories = [], users = [] }: Ar
           <div className="space-y-2">
             <Button 
               type="button" 
-              onClick={handleSubmit((data) => onSubmit(data, 'published'))} 
+              onClick={handleSubmit((data) => {
+                setValue('status', 'published');
+                return onSubmit({ ...data, status: 'published' });
+              })} 
               disabled={loading} 
               className="w-full"
             >
@@ -692,7 +695,10 @@ export default function ArticleForm({ article, categories = [], users = [] }: Ar
             </Button>
             <Button 
               type="button" 
-              onClick={handleSubmit((data) => onSubmit(data, 'draft'))} 
+              onClick={handleSubmit((data) => {
+                setValue('status', 'draft');
+                return onSubmit({ ...data, status: 'draft' });
+              })}
               disabled={loading} 
               variant="outline"
               className="w-full"
