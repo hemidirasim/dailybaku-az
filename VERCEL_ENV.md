@@ -115,3 +115,54 @@ Kodda connection timeout 10 saniyəyə artırılıb. Əgər problem davam edərs
 2. Database provider-in support-a müraciət edin
 3. Vercel IP ranges-ini database whitelist-ə əlavə edin
 
+---
+
+## Admin User Yaradılması
+
+Vercel-də deploy etdikdən sonra admin user yaratmaq üçün:
+
+### Metod 1: API Route ilə (Tövsiyə olunur)
+
+1. Vercel-də `ADMIN_CREATE_SECRET` environment variable-ı əlavə edin:
+   ```
+   ADMIN_CREATE_SECRET=your-secret-token-here
+   ```
+
+2. Terminal-də aşağıdakı komandanı işlədin:
+   ```bash
+   curl -X POST https://your-domain.vercel.app/api/admin/create-user \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer your-secret-token-here" \
+     -d '{
+       "email": "admin@dailybaku.com",
+       "password": "admin123",
+       "name": "Admin"
+     }'
+   ```
+
+3. Uğurlu cavab alırsınızsa, admin paneldə giriş edə bilərsiniz:
+   - URL: `https://your-domain.vercel.app/admin/login`
+   - Email: `admin@dailybaku.com`
+   - Şifrə: `admin123`
+
+### Metod 2: Database-ə birbaşa bağlanma
+
+Database-ə birbaşa bağlanıb `scripts/create-admin.ts` script-ini işlədin:
+
+```bash
+# Local mühitdə
+DATABASE_URL="your-database-url" npm run create-admin
+```
+
+---
+
+## 401 Unauthorized Xətası Həll Yolları
+
+Əgər admin paneldə giriş edərkən 401 xətası alırsınızsa:
+
+1. **NEXTAUTH_SECRET yoxlayın**: Vercel-də düzgün təyin edildiyini yoxlayın
+2. **NEXTAUTH_URL yoxlayın**: Production URL-nizin düzgün olduğunu yoxlayın
+3. **Database-də user yoxlayın**: Admin user-in database-də mövcud olduğunu yoxlayın
+4. **Vercel Logs yoxlayın**: Vercel Dashboard → Logs bölməsində xəta məlumatlarını yoxlayın
+5. **Admin user yaradın**: Yuxarıdakı metodlardan birini istifadə edərək admin user yaradın
+
