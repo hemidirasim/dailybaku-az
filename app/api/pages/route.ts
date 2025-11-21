@@ -16,15 +16,15 @@ export async function GET(req: NextRequest) {
     });
 
     const result = pages
-      .map((page) => {
-        const translation = page.translations.find((t) => t.locale === locale);
+      .map((page: typeof pages[0]) => {
+        const translation = page.translations.find((t: { locale: string }) => t.locale === locale);
         if (!translation) return null;
         return {
           slug: translation.slug,
           title: translation.title,
         };
       })
-      .filter((page) => page !== null);
+      .filter((page: any) => page !== null);
 
     return NextResponse.json(result);
   } catch (error) {

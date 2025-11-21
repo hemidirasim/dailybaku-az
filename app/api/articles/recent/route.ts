@@ -30,8 +30,8 @@ export async function GET(req: NextRequest) {
       take: limit,
     });
 
-    const formattedArticles = articles.map((article) => {
-      const translation = article.translations.find((t) => t.locale === locale);
+    const formattedArticles = articles.map((article: typeof articles[0]) => {
+      const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
       
       return {
         id: article.id,

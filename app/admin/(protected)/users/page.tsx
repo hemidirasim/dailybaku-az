@@ -85,7 +85,7 @@ export default async function UsersPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users.map((user) => (
+                  users.map((user: typeof users[0]) => (
                     <TableRow key={user.id}>
                       <TableCell>{user.name || '-'}</TableCell>
                       <TableCell>{user.email}</TableCell>
@@ -162,7 +162,7 @@ export default async function UsersPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  roles.map((role) => (
+                  roles.map((role: typeof roles[0]) => (
                     <TableRow key={role.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -175,7 +175,7 @@ export default async function UsersPage() {
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {role.rolePermissions.length > 0 ? (
-                            role.rolePermissions.slice(0, 3).map((rp) => (
+                            role.rolePermissions.slice(0, 3).map((rp: typeof role.rolePermissions[0]) => (
                               <Badge key={rp.id} variant="secondary" className="text-xs">
                                 {rp.permission.name}
                               </Badge>

@@ -51,9 +51,9 @@ export default async function TagsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              tags.map((tag) => {
-                const azName = tag.translations.find((t) => t.locale === 'az')?.name;
-                const enName = tag.translations.find((t) => t.locale === 'en')?.name;
+              tags.map((tag: typeof tags[0]) => {
+                const azName = tag.translations.find((t: { locale: string }) => t.locale === 'az')?.name;
+                const enName = tag.translations.find((t: { locale: string }) => t.locale === 'en')?.name;
                 return (
                   <TableRow key={tag.id}>
                     <TableCell className="font-mono text-sm">{tag.slug}</TableCell>

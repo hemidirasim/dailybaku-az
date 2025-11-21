@@ -42,9 +42,9 @@ export async function GET() {
     const siteDescription = 'Azərbaycanda və dünyada baş verən son xəbərlər';
 
     // RSS XML yarat
-    const rssItems = articles.map((article) => {
-      const azTranslation = article.translations.find((t) => t.locale === 'az');
-      const enTranslation = article.translations.find((t) => t.locale === 'en');
+    const rssItems = articles.map((article: typeof articles[0]) => {
+      const azTranslation = article.translations.find((t: { locale: string }) => t.locale === 'az');
+      const enTranslation = article.translations.find((t: { locale: string }) => t.locale === 'en');
       const title = azTranslation?.title || enTranslation?.title || 'Xəbər';
       const description = azTranslation?.excerpt || enTranslation?.excerpt || '';
       const content = azTranslation?.content || enTranslation?.content || '';

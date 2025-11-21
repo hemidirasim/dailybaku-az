@@ -55,10 +55,10 @@ export default async function MenusPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {menus.map((menu) => {
-              const azTranslation = menu.translations.find((t) => t.locale === 'az');
-              const enTranslation = menu.translations.find((t) => t.locale === 'en');
-              const parentAz = menu.parent?.translations.find((t) => t.locale === 'az');
+            {menus.map((menu: typeof menus[0]) => {
+              const azTranslation = menu.translations.find((t: { locale: string }) => t.locale === 'az');
+              const enTranslation = menu.translations.find((t: { locale: string }) => t.locale === 'en');
+              const parentAz = menu.parent?.translations.find((t: { locale: string }) => t.locale === 'az');
 
               return (
                 <TableRow key={menu.id}>

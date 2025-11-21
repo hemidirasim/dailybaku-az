@@ -20,13 +20,13 @@ export async function GET(req: NextRequest) {
     });
 
     const result = tags
-      .map((tag) => {
-        const translation = tag.translations.find((t) => t.locale === locale);
+      .map((tag: typeof tags[0]) => {
+        const translation = tag.translations.find((t: { locale: string }) => t.locale === locale);
         if (!translation) return null;
         
         // Yalnız published və silinməmiş xəbərləri say
         const publishedArticles = tag.articles.filter(
-          (at) => at.article.status === 'published' && !at.article.deletedAt
+          (at: typeof tag.articles[0]) => at.article.status === 'published' && !at.article.deletedAt
         );
         
         return {
@@ -36,9 +36,9 @@ export async function GET(req: NextRequest) {
           articleCount: publishedArticles.length,
         };
       })
-      .filter((tag) => tag !== null)
-      .sort((a, b) => (b?.articleCount || 0) - (a?.articleCount || 0))
-      .map((tag) => ({
+      .filter((tag: any) => tag !== null)
+      .sort((a: any, b: any) => (b?.articleCount || 0) - (a?.articleCount || 0))
+      .map((tag: any) => ({
         id: tag!.id,
         slug: tag!.slug,
         name: tag!.name,

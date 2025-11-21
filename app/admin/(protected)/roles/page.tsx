@@ -58,7 +58,7 @@ export default async function RolesPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              roles.map((role) => (
+              roles.map((role: typeof roles[0]) => (
                 <TableRow key={role.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export default async function RolesPage() {
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {role.rolePermissions.length > 0 ? (
-                        role.rolePermissions.slice(0, 3).map((rp) => (
+                        role.rolePermissions.slice(0, 3).map((rp: typeof role.rolePermissions[0]) => (
                           <Badge key={rp.id} variant="secondary" className="text-xs">
                             {rp.permission.name}
                           </Badge>

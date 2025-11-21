@@ -50,9 +50,9 @@ export default async function PagesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {pages.map((page) => {
-              const azTranslation = page.translations.find((t) => t.locale === 'az');
-              const enTranslation = page.translations.find((t) => t.locale === 'en');
+            {pages.map((page: typeof pages[0]) => {
+              const azTranslation = page.translations.find((t: { locale: string }) => t.locale === 'az');
+              const enTranslation = page.translations.find((t: { locale: string }) => t.locale === 'en');
 
               return (
                 <TableRow key={page.id}>

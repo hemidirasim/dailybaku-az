@@ -33,7 +33,7 @@ export default async function MediaPage() {
     galleryTemplates = [];
   }
 
-  const allImages = articles.flatMap((article) => article.images);
+  const allImages = articles.flatMap((article: typeof articles[0]) => article.images);
 
   return (
     <div>
@@ -53,7 +53,7 @@ export default async function MediaPage() {
         
         <TabsContent value="images" className="mt-6">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {allImages.map((image) => (
+            {allImages.map((image: typeof allImages[0]) => (
               <div key={image.id} className="relative group aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
                 <Image
                   src={image.url}
@@ -90,8 +90,8 @@ export default async function MediaPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {galleryTemplates.map((template) => {
-              const azName = template.translations.find((t) => t.locale === 'az')?.name || template.slug;
+            {galleryTemplates.map((template: typeof galleryTemplates[0]) => {
+              const azName = template.translations.find((t: { locale: string }) => t.locale === 'az')?.name || template.slug;
               return (
                 <div key={template.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="relative aspect-video bg-gray-100">
@@ -101,7 +101,7 @@ export default async function MediaPage() {
                           ? `grid-cols-${Math.min(template.columns, template.images.length)}`
                           : 'grid-cols-1'
                       }`}>
-                        {template.images.slice(0, template.columns * 2).map((img) => (
+                        {template.images.slice(0, template.columns * 2).map((img: typeof template.images[0]) => (
                           <div key={img.id} className="relative">
                             <Image
                               src={img.url}

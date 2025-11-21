@@ -37,9 +37,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
     });
 
-    const categoryPages: MetadataRoute.Sitemap = categories.flatMap((category) => {
-      const azSlug = category.translations.find((t) => t.locale === 'az')?.name;
-      const enSlug = category.translations.find((t) => t.locale === 'en')?.name;
+    const categoryPages: MetadataRoute.Sitemap = categories.flatMap((category: typeof categories[0]) => {
+      const azSlug = category.translations.find((t: { locale: string }) => t.locale === 'az')?.name;
+      const enSlug = category.translations.find((t: { locale: string }) => t.locale === 'en')?.name;
       
       return [
         {
@@ -74,9 +74,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
     });
 
-    const articlePages: MetadataRoute.Sitemap = articles.flatMap((article) => {
-      const azTranslation = article.translations.find((t) => t.locale === 'az');
-      const enTranslation = article.translations.find((t) => t.locale === 'en');
+    const articlePages: MetadataRoute.Sitemap = articles.flatMap((article: typeof articles[0]) => {
+      const azTranslation = article.translations.find((t: { locale: string }) => t.locale === 'az');
+      const enTranslation = article.translations.find((t: { locale: string }) => t.locale === 'en');
       
       const pages: MetadataRoute.Sitemap = [];
       

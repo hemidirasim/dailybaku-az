@@ -37,7 +37,7 @@ export default async function EditRolePage({
       <RoleForm
         role={{
           ...role,
-          rolePermissions: role.rolePermissions.map((rp) => ({
+          rolePermissions: role.rolePermissions.map((rp: typeof role.rolePermissions[0]) => ({
             permissionId: rp.permissionId,
             permission: rp.permission,
           })),

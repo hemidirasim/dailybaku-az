@@ -53,11 +53,11 @@ export async function GET(
       take: limit,
     });
 
-    const categoryTranslation = category.translations.find((t) => t.locale === locale);
+    const categoryTranslation = category.translations.find((t: { locale: string }) => t.locale === locale);
 
-    const result = articles.map((article) => {
-      const translation = article.translations.find((t) => t.locale === locale);
-      const categoryTranslation = article.category?.translations.find((t) => t.locale === locale);
+    const result = articles.map((article: typeof articles[0]) => {
+      const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
+      const categoryTranslation = article.category?.translations.find((t: { locale: string }) => t.locale === locale);
       
       return {
         id: article.id,
