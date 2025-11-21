@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
 import HeaderNews from '@/components/HeaderNews';
-import TopArticles from '@/components/TopArticles';
 import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
 
@@ -136,7 +135,6 @@ export default async function LocaleLayout({
     <>
       <Header 
         headerNews={<HeaderNews />} 
-        topArticlesBelow={<TopArticles offset={0} />}
         menus={headerMenus}
         locale={locale}
       />
