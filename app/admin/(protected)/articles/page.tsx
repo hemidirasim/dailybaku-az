@@ -66,10 +66,10 @@ export default async function ArticlesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {articles.map((article) => {
-              const azTranslation = article.translations.find((t) => t.locale === 'az');
-              const enTranslation = article.translations.find((t) => t.locale === 'en');
-              const categoryAz = article.category?.translations.find((t) => t.locale === 'az');
+            {articles.map((article: typeof articles[0]) => {
+              const azTranslation = article.translations.find((t: { locale: string }) => t.locale === 'az');
+              const enTranslation = article.translations.find((t: { locale: string }) => t.locale === 'en');
+              const categoryAz = article.category?.translations.find((t: { locale: string }) => t.locale === 'az');
 
               return (
                 <TableRow key={article.id}>
