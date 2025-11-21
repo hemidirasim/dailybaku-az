@@ -58,40 +58,40 @@ async function getMenus(locale: string, location: 'header' | 'footer' = 'header'
     }),
   ]);
 
-  return menus.map((menu) => {
-    const translation = menu.translations.find((t) => t.locale === locale);
+  return menus.map((menu: typeof menus[0]) => {
+    const translation = menu.translations.find((t: { locale: string }) => t.locale === locale);
     
     // Generate URL based on menu type
     let menuUrl = translation?.url || '#';
     if (menu.type === 'category' && menu.targetId) {
-      const category = categories.find((c) => c.id === menu.targetId);
+      const category = categories.find((c: { id: string }) => c.id === menu.targetId);
       if (category) {
         menuUrl = `/${locale}/category/${category.slug}`;
       }
     } else if (menu.type === 'page' && menu.targetId) {
-      const page = pages.find((p) => p.id === menu.targetId);
+      const page = pages.find((p: { id: string }) => p.id === menu.targetId);
       if (page) {
-        const pageTranslation = page.translations.find((t) => t.locale === locale);
+        const pageTranslation = page.translations.find((t: { locale: string }) => t.locale === locale);
         if (pageTranslation) {
           menuUrl = `/${locale}/page/${pageTranslation.slug}`;
         }
       }
     }
 
-    const children = menu.children.map((child) => {
-      const childTranslation = child.translations.find((t) => t.locale === locale);
+    const children = menu.children.map((child: typeof menu.children[0]) => {
+      const childTranslation = child.translations.find((t: { locale: string }) => t.locale === locale);
       
       // Generate URL for child menu
       let childUrl = childTranslation?.url || '#';
       if (child.type === 'category' && child.targetId) {
-        const category = categories.find((c) => c.id === child.targetId);
+        const category = categories.find((c: { id: string }) => c.id === child.targetId);
         if (category) {
           childUrl = `/${locale}/category/${category.slug}`;
         }
       } else if (child.type === 'page' && child.targetId) {
-        const page = pages.find((p) => p.id === child.targetId);
+        const page = pages.find((p: { id: string }) => p.id === child.targetId);
         if (page) {
-          const pageTranslation = page.translations.find((t) => t.locale === locale);
+          const pageTranslation = page.translations.find((t: { locale: string }) => t.locale === locale);
           if (pageTranslation) {
             childUrl = `/${locale}/page/${pageTranslation.slug}`;
           }
