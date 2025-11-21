@@ -84,6 +84,5 @@ export const authOptions: NextAuthOptions = {
   },
   debug: true, // Enable debug in production to see errors
   secret: process.env.NEXTAUTH_SECRET,
-  trustHost: true, // Required for Vercel
 };
 
