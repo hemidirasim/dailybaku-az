@@ -98,7 +98,7 @@ async function getRecentArticles(locale: string) {
     take: 5,
   });
 
-  return articles.map((article) => {
+  return articles.map((article: typeof articles[0]) => {
     const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
     return {
       id: article.id,
