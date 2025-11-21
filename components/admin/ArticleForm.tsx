@@ -718,13 +718,14 @@ export default function ArticleForm({ article, categories = [], users = [] }: Ar
                 <Label htmlFor="authorId">Müəllif</Label>
                 {availableUsers.length > 0 ? (
                   <Select
-                    value={authorIdValue || undefined}
-                    onValueChange={(value) => setValue('authorId', value)}
+                    value={watch('authorId') || 'none'}
+                    onValueChange={(value) => setValue('authorId', value === 'none' ? null : value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Müəllif seçin" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none">Müəllif seçin</SelectItem>
                       {availableUsers.map((user) => (
                         <SelectItem key={user.id} value={user.id}>
                           {user.name || user.email}{' '}
