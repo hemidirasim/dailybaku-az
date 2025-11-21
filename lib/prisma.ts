@@ -29,9 +29,14 @@ function getPrismaClient(): PrismaClient {
 
   const pool = new Pool({
     connectionString: databaseUrl,
-    max: 20,
+    max: 10,
+    min: 2,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000, // 10 seconds for Vercel
+    statement_timeout: 30000, // 30 seconds for queries
+    query_timeout: 30000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000,
   });
 
   const adapter = new PrismaPg(pool);
@@ -39,6 +44,11 @@ function getPrismaClient(): PrismaClient {
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    datasources: {
+      db: {
+        url: databaseUrl,
+      },
+    },
   });
 }
 
