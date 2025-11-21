@@ -265,7 +265,7 @@ async function importNews() {
                 order: 0,
                 isPrimary: true
               }]
-            } : []
+            } : undefined
           }
         });
 
