@@ -1,15 +1,23 @@
 'use client';
 
-import { Article } from '@/lib/supabase';
-import { formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { az, enUS } from 'date-fns/locale';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
 import { Advertisement } from '@/components/Advertisement';
 
+interface RecentArticle {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  image_url?: string | null;
+  published_at: Date | string | null;
+}
+
 interface SidebarProps {
-  recentArticles: Article[];
+  recentArticles: RecentArticle[];
 }
 
 export default function Sidebar({ recentArticles }: SidebarProps) {
@@ -30,15 +38,13 @@ export default function Sidebar({ recentArticles }: SidebarProps) {
             <li key={article.id} className="flex items-start gap-2">
               <span className="text-red-600 text-lg mt-1">•</span>
               <div className="flex-1">
-                <p className="text-xs text-muted-foreground mb-1">
-                  {new Date(article.published_at).toLocaleDateString(locale === 'az' ? 'az-AZ' : 'en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
+                {article.published_at && (
+                  <p className="text-xs text-muted-foreground mb-1">
+                    {format(new Date(article.published_at), 'dd MMMM yyyy, HH:mm', { 
+                      locale: locale === 'az' ? az : enUS 
+                    })}
+                  </p>
+                )}
                 <Link
                   href={`/${locale}/article/${article.slug}`}
                   className="text-sm font-medium hover:text-primary transition-colors"
