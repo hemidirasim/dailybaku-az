@@ -13,7 +13,7 @@ async function getCategory(slug: string, locale: string) {
 
   if (!category) return null;
 
-  const translation = category.translations.find((t) => t.locale === locale);
+  const translation = category.translations.find((t: { locale: string }) => t.locale === locale);
   return {
     ...category,
     name: translation?.name || category.slug,
@@ -50,9 +50,9 @@ async function getCategoryArticles(categoryId: string, locale: string) {
     take: 20,
   });
 
-  return articles.map((article) => {
-    const translation = article.translations.find((t) => t.locale === locale);
-    const categoryTranslation = article.category?.translations.find((t) => t.locale === locale);
+  return articles.map((article: typeof articles[0]) => {
+    const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
+    const categoryTranslation = article.category?.translations.find((t: { locale: string }) => t.locale === locale);
     return {
       id: article.id,
       title: translation?.title || '',
@@ -89,8 +89,8 @@ async function getRecentArticles(locale: string) {
     take: 5,
   });
 
-  return articles.map((article) => {
-    const translation = article.translations.find((t) => t.locale === locale);
+  return articles.map((article: typeof articles[0]) => {
+    const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
     return {
       id: article.id,
       title: translation?.title || '',
