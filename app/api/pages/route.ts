@@ -29,7 +29,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching pages:', error);
-    return NextResponse.json({ error: 'Failed to fetch pages' }, { status: 500 });
+    // Return empty array instead of error to prevent 404
+    return NextResponse.json([]);
   }
 }
 
