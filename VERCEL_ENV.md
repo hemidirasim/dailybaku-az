@@ -2,11 +2,13 @@
 
 Vercel-də aşağıdakı environment variable-ları təyin edin:
 
-## Database
+## Database (Neon PostgreSQL)
 
 ```
-DATABASE_URL=postgresql://dailybaku_user:RMSKSYcLqNzawhuNhP9Lf65PB@68.183.173.136:5432/dailybaku?schema=public
+DATABASE_URL=postgresql://neondb_owner:npg_zlq7FAJ8hoGg@ep-cool-tooth-ahdsbzhq-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&schema=public
 ```
+
+**Qeyd:** Neon database istifadə edirik. Pooler URL-i istifadə edin (sonunda `-pooler` var).
 
 ## NextAuth
 
@@ -53,8 +55,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ## Tam Environment Variables Siyahısı
 
 ```env
-# Database (Vacib)
-DATABASE_URL=postgresql://dailybaku_user:RMSKSYcLqNzawhuNhP9Lf65PB@68.183.173.136:5432/dailybaku?schema=public
+# Database (Vacib) - Neon PostgreSQL
+DATABASE_URL=postgresql://neondb_owner:npg_zlq7FAJ8hoGg@ep-cool-tooth-ahdsbzhq-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&schema=public
 
 # NextAuth (Vacib)
 NEXTAUTH_SECRET=<generate-with-openssl-rand-base64-32>
