@@ -50,8 +50,8 @@ async function getArticle(slug: string, locale: string) {
     data: { views: article.views + 1 },
   });
 
-  const translation = article.translations.find((t) => t.locale === locale);
-  const categoryTranslation = article.category?.translations.find((t) => t.locale === locale);
+  const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
+  const categoryTranslation = article.category?.translations.find((t: { locale: string }) => t.locale === locale);
 
   return {
     ...article,
@@ -67,7 +67,7 @@ async function getArticle(slug: string, locale: string) {
         }
       : null,
     author: article.author?.name || article.author?.email || 'Admin',
-    image_url: article.images.find((img) => img.isPrimary)?.url || article.images[0]?.url || null,
+    image_url: article.images.find((img: { isPrimary: boolean }) => img.isPrimary)?.url || article.images[0]?.url || null,
     images: article.images,
     views: article.views + 1,
     published_at: article.publishedAt,
@@ -99,7 +99,7 @@ async function getRecentArticles(locale: string) {
   });
 
   return articles.map((article) => {
-    const translation = article.translations.find((t) => t.locale === locale);
+    const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
     return {
       id: article.id,
       title: translation?.title || '',
