@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const filepath = join(uploadsDir, filename);
 
     // Save file
-    await writeFile(filepath, buffer);
+    await writeFile(filepath, new Uint8Array(buffer));
 
     // Return URL
     const url = `/uploads/${filename}`;
