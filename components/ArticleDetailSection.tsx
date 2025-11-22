@@ -144,7 +144,7 @@ export default function ArticleDetailSection() {
                 alt={mainArticle.title}
                 width={800}
                 height={400}
-                className="w-full h-auto object-cover grayscale"
+                className="w-full h-auto object-cover"
               />
               <div className="absolute top-4 left-4">
                 <div className="bg-red-600 text-white px-3 py-2 text-xs font-bold uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
@@ -180,7 +180,7 @@ export default function ArticleDetailSection() {
                         alt={article.title}
                         width={400}
                         height={250}
-                        className="w-full h-auto object-cover grayscale"
+                        className="w-full h-auto object-cover"
                       />
                       <div className="absolute top-4 left-4">
                         <div className="bg-red-600 text-white px-3 py-2 text-xs font-bold uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
@@ -219,7 +219,7 @@ export default function ArticleDetailSection() {
                   alt={sideArticle1.title}
                   width={300}
                   height={200}
-                  className="w-full h-auto object-cover grayscale"
+                  className="w-full h-auto object-cover"
                 />
                 <div className="absolute top-4 left-4">
                   <div className="bg-red-600 text-white px-3 py-2 text-xs font-bold uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
@@ -261,7 +261,7 @@ export default function ArticleDetailSection() {
                   alt={sideArticle2.title}
                   width={300}
                   height={200}
-                  className="w-full h-auto object-cover grayscale"
+                  className="w-full h-auto object-cover"
                 />
                 <div className="absolute top-4 left-4">
                   <div className="bg-red-600 text-white px-3 py-2 text-xs font-bold uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>

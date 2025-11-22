@@ -15,7 +15,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name, email, password, role } = body;
+    const { name, email, password, role, avatar, bioAz, bioEn } = body;
     const { id } = await params;
 
     if (!email) {
@@ -41,6 +41,9 @@ export async function PUT(
       name: name || null,
       email,
       role: role || 'editor',
+      avatar: avatar || null,
+      bioAz: bioAz || null,
+      bioEn: bioEn || null,
     };
 
     // Şifrə dəyişdirilərsə hash et
@@ -97,4 +100,3 @@ export async function DELETE(
     );
   }
 }
-

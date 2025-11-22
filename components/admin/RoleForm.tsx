@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -50,16 +50,35 @@ interface RoleFormProps {
 export default function RoleForm({ role, permissions = [] }: RoleFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [availablePermissions, setAvailablePermissions] = useState(permissions);
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(
-    role?.rolePermissions.map((rp) => rp.permissionId) || []
-  );
+  const [availablePermissions, setAvailablePermissions] = useState<Array<{
+    id: string;
+    key: string;
+    name: string;
+    description: string | null;
+    category: string;
+  }>>(permissions || []);
+  
+  const initialSelected = useMemo(() => {
+    return role?.rolePermissions?.map((rp) => rp.permissionId) || [];
+  }, [role]);
+  
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(initialSelected);
+
+  useEffect(() => {
+    setSelectedPermissions(initialSelected);
+  }, [initialSelected]);
 
   useEffect(() => {
     if (permissions.length === 0) {
       fetch('/api/admin/permissions')
         .then((res) => res.json())
-        .then((data) => setAvailablePermissions(data || []))
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setAvailablePermissions(data);
+          } else {
+            setAvailablePermissions([]);
+          }
+        })
         .catch((error) => {
           console.error('Error fetching permissions:', error);
           setAvailablePermissions([]);
@@ -71,41 +90,53 @@ export default function RoleForm({ role, permissions = [] }: RoleFormProps) {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
     setValue,
   } = useForm<RoleFormData>({
     resolver: zodResolver(roleSchema),
-    defaultValues: role
-      ? {
-          key: role.key,
-          name: role.name,
-          description: role.description || '',
-          permissionIds: role.rolePermissions.map((rp) => rp.permissionId),
-        }
-      : {
-          key: '',
-          name: '',
-          description: '',
-          permissionIds: [],
-        },
+    defaultValues: {
+      key: role?.key || '',
+      name: role?.name || '',
+      description: role?.description || '',
+      permissionIds: initialSelected,
+    },
   });
 
-  // Group permissions by category
-  const permissionsByCategory = availablePermissions.reduce((acc, perm) => {
-    if (!acc[perm.category]) {
-      acc[perm.category] = [];
-    }
-    acc[perm.category].push(perm);
-    return acc;
-  }, {} as Record<string, typeof availablePermissions>);
+  // Group permissions by category with useMemo for performance
+  const permissionsByCategory = useMemo(() => {
+    const grouped: Record<string, Array<{
+      id: string;
+      key: string;
+      name: string;
+      description: string | null;
+      category: string;
+    }>> = {};
+    
+    availablePermissions.forEach((perm, index) => {
+      if (!perm || !perm.id) return;
+      const category = perm.category || 'uncategorized';
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+      grouped[category].push(perm);
+    });
+    
+    return grouped;
+  }, [availablePermissions]);
 
-  const togglePermission = (permissionId: string) => {
-    const newSelected = selectedPermissions.includes(permissionId)
-      ? selectedPermissions.filter((id) => id !== permissionId)
-      : [...selectedPermissions, permissionId];
-    setSelectedPermissions(newSelected);
-    setValue('permissionIds', newSelected);
-  };
+  const handlePermissionChange = useCallback((permissionId: string, checked: boolean) => {
+    if (!permissionId) return;
+    
+    setSelectedPermissions((prev) => {
+      let newSelected: string[];
+      if (checked) {
+        newSelected = prev.includes(permissionId) ? prev : [...prev, permissionId];
+      } else {
+        newSelected = prev.filter((id) => id !== permissionId);
+      }
+      setValue('permissionIds', newSelected, { shouldValidate: false });
+      return newSelected;
+    });
+  }, [setValue]);
 
   const onSubmit = async (data: RoleFormData) => {
     setLoading(true);
@@ -136,6 +167,8 @@ export default function RoleForm({ role, permissions = [] }: RoleFormProps) {
       setLoading(false);
     }
   };
+
+  const categoryKeys = Object.keys(permissionsByCategory);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -189,39 +222,56 @@ export default function RoleForm({ role, permissions = [] }: RoleFormProps) {
           <CardTitle>İcazələr</CardTitle>
         </CardHeader>
         <CardContent>
-          {Object.keys(permissionsByCategory).length === 0 ? (
+          {categoryKeys.length === 0 ? (
             <p className="text-sm text-gray-500">İcazə yoxdur</p>
           ) : (
             <div className="space-y-6">
-              {Object.entries(permissionsByCategory).map(([category, perms]) => (
-                <div key={category}>
-                  <h4 className="font-semibold mb-3 capitalize">{category}</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {perms.map((permission) => (
-                      <div
-                        key={permission.id}
-                        className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                        onClick={() => togglePermission(permission.id)}
-                      >
-                        <Checkbox
-                          checked={selectedPermissions.includes(permission.id)}
-                          onCheckedChange={() => togglePermission(permission.id)}
-                        />
-                        <div className="flex-1">
-                          <Label className="font-medium cursor-pointer">
-                            {permission.name}
-                          </Label>
-                          {permission.description && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              {permission.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+              {categoryKeys.map((category, categoryIndex) => {
+                const perms = permissionsByCategory[category];
+                if (!perms || perms.length === 0) return null;
+                
+                return (
+                  <div key={`category-${categoryIndex}-${category}`}>
+                    <h4 className="font-semibold mb-3 capitalize">
+                      {category || 'Uncategorized'}
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {perms.map((permission, permIndex) => {
+                        if (!permission || !permission.id) return null;
+                        
+                        const isChecked = selectedPermissions.includes(permission.id);
+                        const checkboxId = `perm-checkbox-${permission.id}`;
+                        
+                        return (
+                          <div
+                            key={`permission-${permission.id}-${permIndex}`}
+                            className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50"
+                          >
+                            <Checkbox
+                              id={checkboxId}
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                handlePermissionChange(permission.id, checked === true);
+                              }}
+                            />
+                            <Label
+                              htmlFor={checkboxId}
+                              className="flex-1 font-medium cursor-pointer"
+                            >
+                              {permission.name || permission.key || 'Unnamed'}
+                              {permission.description && (
+                                <p className="text-xs text-gray-500 mt-1 font-normal">
+                                  {permission.description}
+                                </p>
+                              )}
+                            </Label>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -242,4 +292,3 @@ export default function RoleForm({ role, permissions = [] }: RoleFormProps) {
     </form>
   );
 }
-

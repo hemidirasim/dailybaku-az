@@ -25,10 +25,47 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
+// Tərcümələr
+const translations = {
+  az: {
+    aboutUs: 'Haqqımızda',
+    aboutUsText: 'Daily Baku - Azərbaycanın ən etibarlı xəbər mənbəsi. Gündəlik xəbərlər, analitik materiallar və aktuallıqla sizə çatırıq.',
+    aboutUsLink: '→ Haqqımızda',
+    contact: 'Əlaqə',
+    contactLink: '→ Əlaqə',
+    terms: 'Qaydalar',
+    termsLink: '→ Qaydalar',
+    tags: 'Teqlər',
+    noTags: 'Teqlər yoxdur',
+    hotNews: 'Son Xəbərlər',
+    author: 'Müəllif:',
+    noNews: 'Xəbər yoxdur',
+    quickLinks: 'Sürətli Keçidlər',
+    allRightsReserved: 'Bütün hüquqlar qorunur',
+  },
+  en: {
+    aboutUs: 'About Us',
+    aboutUsText: 'Daily Baku - Azerbaijan most reliable news source. We bring you daily news, analytical materials and current events.',
+    aboutUsLink: '→ About Us',
+    contact: 'Contact',
+    contactLink: '→ Contact',
+    terms: 'Terms',
+    termsLink: '→ Terms',
+    tags: 'Tags',
+    noTags: 'No tags',
+    hotNews: 'Hot News',
+    author: 'Written by:',
+    noNews: 'No news',
+    quickLinks: 'Quick Links',
+    allRightsReserved: 'All Rights Reserved',
+  },
+};
+
 async function getPages(locale: string): Promise<Page[]> {
   try {
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_BASE_URL || 'https://dailybaku.midiya.az');
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/pages?locale=${locale}`,
+      `${baseUrl}/api/pages?locale=${locale}`,
       { cache: 'no-store' }
     );
     if (!response.ok) return [];
@@ -41,8 +78,9 @@ async function getPages(locale: string): Promise<Page[]> {
 
 async function getHotNews(locale: string): Promise<HotNews[]> {
   try {
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_BASE_URL || 'https://dailybaku.midiya.az');
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/articles/recent?locale=${locale}&limit=3`,
+      `${baseUrl}/api/articles/recent?locale=${locale}&limit=3`,
       { cache: 'no-store' }
     );
     if (!response.ok) return [];
@@ -61,8 +99,9 @@ async function getHotNews(locale: string): Promise<HotNews[]> {
 
 async function getTags(locale: string): Promise<string[]> {
   try {
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_BASE_URL || 'https://dailybaku.midiya.az');
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/tags?locale=${locale}&limit=15`,
+      `${baseUrl}/api/tags?locale=${locale}&limit=15`,
       { cache: 'no-store' }
     );
     if (!response.ok) return [];
@@ -81,7 +120,11 @@ interface FooterProps {
 
 export default function Footer({ menus = [], locale: propLocale }: FooterProps) {
   const pathname = usePathname();
-  const locale = propLocale || pathname.split('/')[1] === 'en' ? 'en' : 'az';
+  const segments = pathname.split('/').filter(Boolean);
+  const currentLocale = segments[0] === 'az' || segments[0] === 'en' ? segments[0] : propLocale || 'az';
+  const locale = currentLocale === 'en' ? 'en' : 'az';
+  const t = translations[locale];
+  
   const [pages, setPages] = useState<Page[]>([]);
   const [hotNews, setHotNews] = useState<HotNews[]>([]);
   const [tags, setTags] = useState<string[]>([]);
@@ -105,11 +148,9 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* About Us */}
             <div>
-              <h3 className="text-lg font-bold mb-4">{locale === 'az' ? 'Haqqımızda' : 'About Us'}</h3>
+              <h3 className="text-lg font-bold mb-4">{t.aboutUs}</h3>
               <p className="text-sm text-gray-300 mb-4 leading-relaxed">
-                {locale === 'az' 
-                  ? 'Daily Baku - Azərbaycanın ən etibarlı xəbər mənbəsi. Gündəlik xəbərlər, analitik materiallar və aktuallıqla sizə çatırıq.'
-                  : 'Daily Baku - Azerbaijan most reliable news source. We bring you daily news, analytical materials and current events.'}
+                {t.aboutUsText}
               </p>
               <div className="flex flex-col gap-2 mt-4">
                 {aboutUsPage && (
@@ -117,7 +158,7 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
                     href={`/${locale}/page/${aboutUsPage.slug}`}
                     className="text-sm text-gray-300 hover:text-white transition-colors"
                   >
-                    {locale === 'az' ? '→ Haqqımızda' : '→ About Us'}
+                    {t.aboutUsLink}
                   </Link>
                 )}
                 {contactPage && (
@@ -125,7 +166,7 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
                     href={`/${locale}/page/${contactPage.slug}`}
                     className="text-sm text-gray-300 hover:text-white transition-colors"
                   >
-                    {locale === 'az' ? '→ Əlaqə' : '→ Contact'}
+                    {t.contactLink}
                   </Link>
                 )}
                 {termsPage && (
@@ -133,7 +174,7 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
                     href={`/${locale}/page/${termsPage.slug}`}
                     className="text-sm text-gray-300 hover:text-white transition-colors"
                   >
-                    {locale === 'az' ? '→ Qaydalar' : '→ Terms'}
+                    {t.termsLink}
                   </Link>
                 )}
               </div>
@@ -141,7 +182,7 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
 
             {/* Tag Cloud */}
             <div>
-              <h3 className="text-lg font-bold mb-4">{locale === 'az' ? 'Teqlər' : 'Tags'}</h3>
+              <h3 className="text-lg font-bold mb-4">{t.tags}</h3>
               <div className="flex flex-wrap gap-2">
                 {tags.length > 0 ? (
                   tags.map((tag, index) => (
@@ -153,14 +194,14 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
                     </button>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-400">{locale === 'az' ? 'Teqlər yoxdur' : 'No tags'}</p>
+                  <p className="text-sm text-gray-400">{t.noTags}</p>
                 )}
               </div>
             </div>
 
             {/* Hot News */}
             <div>
-              <h3 className="text-lg font-bold mb-4">{locale === 'az' ? 'Son Xəbərlər' : 'Hot News'}</h3>
+              <h3 className="text-lg font-bold mb-4">{t.hotNews}</h3>
               <div className="space-y-4">
                 {hotNews.length > 0 ? (
                   hotNews.map((news, index) => (
@@ -171,7 +212,7 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
                       }`}
                     >
                       <p className="text-xs text-gray-400 mb-2">
-                        {locale === 'az' ? 'Müəllif:' : 'Written by:'} {news.author}
+                        {t.author} {news.author}
                       </p>
                       <Link
                         href={`/${locale}/article/${news.slug}`}
@@ -182,14 +223,14 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-400">{locale === 'az' ? 'Xəbər yoxdur' : 'No news'}</p>
+                  <p className="text-sm text-gray-400">{t.noNews}</p>
                 )}
               </div>
             </div>
 
             {/* Quick Links / Footer Menu */}
             <div>
-              <h3 className="text-lg font-bold mb-4">{locale === 'az' ? 'Sürətli Keçidlər' : 'Quick Links'}</h3>
+              <h3 className="text-lg font-bold mb-4">{t.quickLinks}</h3>
               <ul className="space-y-2">
                 {menus.length > 0 ? (
                   menus.map((menu) => (
@@ -269,12 +310,12 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-300">
-              © {new Date().getFullYear()} - Daily Baku. {locale === 'az' ? 'Bütün hüquqlar qorunur' : 'All Rights Reserved'}
+              © {new Date().getFullYear()} - Daily Baku. {t.allRightsReserved}
             </span>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="w-8 h-8 border border-white flex items-center justify-center hover:bg-white hover:text-black transition-colors"
-              aria-label="Scroll to top"
+              aria-label={locale === 'az' ? 'Yuxarı qayıt' : 'Scroll to top'}
             >
               <ChevronUp className="h-4 w-4" />
             </button>
@@ -284,4 +325,3 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
     </footer>
   );
 }
-

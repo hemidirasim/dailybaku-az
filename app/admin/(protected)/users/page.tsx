@@ -15,25 +15,33 @@ import DeleteButton from '@/components/admin/DeleteButton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default async function UsersPage() {
-  const [users, roles] = await Promise.all([
-    prisma.user.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-    }),
-    prisma.role.findMany({
-      include: {
-        rolePermissions: {
-          include: {
-            permission: true,
+  let users: any[] = [];
+  let roles: any[] = [];
+
+  try {
+    [users, roles] = await Promise.all([
+      prisma.user.findMany({
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      prisma.role.findMany({
+        include: {
+          rolePermissions: {
+            include: {
+              permission: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    }),
-  ]);
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }).catch(() => []), // If roles query fails, use empty array
+    ]);
+  } catch (error) {
+    console.error('Error fetching users/roles:', error);
+    // Continue with empty arrays if query fails
+  }
 
   return (
     <div>
@@ -99,23 +107,22 @@ export default async function UsersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {new Date(user.createdAt).toLocaleDateString('az-AZ', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
+                        {user.createdAt
+                          ? new Date(user.createdAt).toLocaleDateString('az-AZ')
+                          : '-'}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Link href={`/admin/users/${user.id}/edit`}>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="outline" size="sm">
                               <Edit className="h-4 w-4" />
                             </Button>
                           </Link>
                           <DeleteButton
                             id={user.id}
-                            endpoint={`/api/admin/users/${user.id}`}
+                            endpoint="/api/admin/users"
                             redirectUrl="/admin/users"
+                            
                           />
                         </div>
                       </TableCell>
@@ -130,13 +137,11 @@ export default async function UsersPage() {
         <TabsContent value="roles" className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold">Rol və İcazələr</h2>
-              <p className="text-sm text-muted-foreground">
-                Rolları yaradın, icazələri təyin edin və sistemlər üzrə paylayın
-              </p>
+              <h2 className="text-xl font-semibold">Rollar</h2>
+              <p className="text-sm text-muted-foreground">Rolları və icazələri idarə edin</p>
             </div>
             <Link href="/admin/roles/new">
-              <Button variant="outline">
+              <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Yeni Rol
               </Button>
@@ -147,70 +152,38 @@ export default async function UsersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Rol</TableHead>
-                  <TableHead>Açıqlama</TableHead>
+                  <TableHead>Ad</TableHead>
+                  <TableHead>Key</TableHead>
                   <TableHead>İcazələr</TableHead>
-                  <TableHead>Tip</TableHead>
                   <TableHead>Əməliyyatlar</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {roles.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={4} className="text-center py-8 text-gray-500">
                       Heç bir rol yoxdur
                     </TableCell>
                   </TableRow>
                 ) : (
                   roles.map((role: typeof roles[0]) => (
                     <TableRow key={role.id}>
+                      <TableCell>{role.name || role.key || '-'}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-gray-400" />
-                          <span className="font-medium">{role.name}</span>
-                          <span className="text-xs text-gray-400">({role.key})</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{role.description || '-'}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {role.rolePermissions.length > 0 ? (
-                            role.rolePermissions.slice(0, 3).map((rp: typeof role.rolePermissions[0]) => (
-                              <Badge key={rp.id} variant="secondary" className="text-xs">
-                                {rp.permission.name}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-xs text-gray-400">İcazə yoxdur</span>
-                          )}
-                          {role.rolePermissions.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{role.rolePermissions.length - 3} daha
-                            </Badge>
-                          )}
-                        </div>
+                        <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                          {role.key || '-'}
+                        </code>
                       </TableCell>
                       <TableCell>
-                        {role.isSystem ? (
-                          <Badge variant="default">Sistem</Badge>
-                        ) : (
-                          <Badge variant="outline">Fərdi</Badge>
-                        )}
+                        {role.rolePermissions?.length || 0} icazə
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Link href={`/admin/roles/${role.id}/edit`}>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="outline" size="sm">
                               <Edit className="h-4 w-4" />
                             </Button>
                           </Link>
-                          {!role.isSystem && (
-                            <DeleteButton
-                              id={role.id}
-                              endpoint={`/api/admin/roles/${role.id}`}
-                              redirectUrl="/admin/users"
-                            />
-                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -224,4 +197,3 @@ export default async function UsersPage() {
     </div>
   );
 }
-

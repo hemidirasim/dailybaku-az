@@ -18,6 +18,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="az">
+      <head>
+        <link href="https://fonts.cdnfonts.com/css/chomsky" rel="stylesheet" />
+      </head>
       <body className={inter.className}>
         <Providers>
           {children}

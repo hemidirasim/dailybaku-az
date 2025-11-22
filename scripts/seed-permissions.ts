@@ -1,146 +1,92 @@
-import 'dotenv/config';
-import { prisma } from '../lib/prisma';
+import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const permissions = [
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+const defaultPermissions = [
   // Articles
-  { key: 'articles.view', name: 'Xəbərləri Görüntülə', category: 'articles', description: 'Xəbərləri görüntüləmək icazəsi' },
-  { key: 'articles.create', name: 'Xəbər Yarat', category: 'articles', description: 'Yeni xəbər yaratmaq icazəsi' },
-  { key: 'articles.edit', name: 'Xəbər Redaktə Et', category: 'articles', description: 'Xəbərləri redaktə etmək icazəsi' },
-  { key: 'articles.delete', name: 'Xəbər Sil', category: 'articles', description: 'Xəbərləri silmək icazəsi' },
-  { key: 'articles.publish', name: 'Xəbər Paylaş', category: 'articles', description: 'Xəbərləri paylaşmaq icazəsi' },
-
+  { key: 'articles.view', name: 'Xəbərləri görüntülə', category: 'articles', description: 'Xəbərləri görüntüləmə icazəsi' },
+  { key: 'articles.create', name: 'Xəbər yarat', category: 'articles', description: 'Yeni xəbər yaratma icazəsi' },
+  { key: 'articles.edit', name: 'Xəbər redaktə et', category: 'articles', description: 'Xəbər redaktə etmə icazəsi' },
+  { key: 'articles.delete', name: 'Xəbər sil', category: 'articles', description: 'Xəbər silmə icazəsi' },
+  
   // Categories
-  { key: 'categories.view', name: 'Kateqoriyaları Görüntülə', category: 'categories', description: 'Kateqoriyaları görüntüləmək icazəsi' },
-  { key: 'categories.create', name: 'Kateqoriya Yarat', category: 'categories', description: 'Yeni kateqoriya yaratmaq icazəsi' },
-  { key: 'categories.edit', name: 'Kateqoriya Redaktə Et', category: 'categories', description: 'Kateqoriyaları redaktə etmək icazəsi' },
-  { key: 'categories.delete', name: 'Kateqoriya Sil', category: 'categories', description: 'Kateqoriyaları silmək icazəsi' },
-
-  // Tags
-  { key: 'tags.view', name: 'Tagları Görüntülə', category: 'tags', description: 'Tagları görüntüləmək icazəsi' },
-  { key: 'tags.create', name: 'Tag Yarat', category: 'tags', description: 'Yeni tag yaratmaq icazəsi' },
-  { key: 'tags.edit', name: 'Tag Redaktə Et', category: 'tags', description: 'Tagları redaktə etmək icazəsi' },
-  { key: 'tags.delete', name: 'Tag Sil', category: 'tags', description: 'Tagları silmək icazəsi' },
-
+  { key: 'categories.view', name: 'Kateqoriyaları görüntülə', category: 'categories', description: 'Kateqoriyaları görüntüləmə icazəsi' },
+  { key: 'categories.create', name: 'Kateqoriya yarat', category: 'categories', description: 'Yeni kateqoriya yaratma icazəsi' },
+  { key: 'categories.edit', name: 'Kateqoriya redaktə et', category: 'categories', description: 'Kateqoriya redaktə etmə icazəsi' },
+  { key: 'categories.delete', name: 'Kateqoriya sil', category: 'categories', description: 'Kateqoriya silmə icazəsi' },
+  
   // Menus
-  { key: 'menus.view', name: 'Menuları Görüntülə', category: 'menus', description: 'Menuları görüntüləmək icazəsi' },
-  { key: 'menus.create', name: 'Menu Yarat', category: 'menus', description: 'Yeni menu yaratmaq icazəsi' },
-  { key: 'menus.edit', name: 'Menu Redaktə Et', category: 'menus', description: 'Menuları redaktə etmək icazəsi' },
-  { key: 'menus.delete', name: 'Menu Sil', category: 'menus', description: 'Menuları silmək icazəsi' },
-
+  { key: 'menus.view', name: 'Menü görüntülə', category: 'menus', description: 'Menü görüntüləmə icazəsi' },
+  { key: 'menus.create', name: 'Menü yarat', category: 'menus', description: 'Yeni menü yaratma icazəsi' },
+  { key: 'menus.edit', name: 'Menü redaktə et', category: 'menus', description: 'Menü redaktə etmə icazəsi' },
+  { key: 'menus.delete', name: 'Menü sil', category: 'menus', description: 'Menü silmə icazəsi' },
+  
+  // Pages
+  { key: 'pages.view', name: 'Səhifələri görüntülə', category: 'pages', description: 'Səhifələri görüntüləmə icazəsi' },
+  { key: 'pages.create', name: 'Səhifə yarat', category: 'pages', description: 'Yeni səhifə yaratma icazəsi' },
+  { key: 'pages.edit', name: 'Səhifə redaktə et', category: 'pages', description: 'Səhifə redaktə etmə icazəsi' },
+  { key: 'pages.delete', name: 'Səhifə sil', category: 'pages', description: 'Səhifə silmə icazəsi' },
+  
   // Users
-  { key: 'users.view', name: 'İstifadəçiləri Görüntülə', category: 'users', description: 'İstifadəçiləri görüntüləmək icazəsi' },
-  { key: 'users.create', name: 'İstifadəçi Yarat', category: 'users', description: 'Yeni istifadəçi yaratmaq icazəsi' },
-  { key: 'users.edit', name: 'İstifadəçi Redaktə Et', category: 'users', description: 'İstifadəçiləri redaktə etmək icazəsi' },
-  { key: 'users.delete', name: 'İstifadəçi Sil', category: 'users', description: 'İstifadəçiləri silmək icazəsi' },
-
+  { key: 'users.view', name: 'İstifadəçiləri görüntülə', category: 'users', description: 'İstifadəçiləri görüntüləmə icazəsi' },
+  { key: 'users.create', name: 'İstifadəçi yarat', category: 'users', description: 'Yeni istifadəçi yaratma icazəsi' },
+  { key: 'users.edit', name: 'İstifadəçi redaktə et', category: 'users', description: 'İstifadəçi redaktə etmə icazəsi' },
+  { key: 'users.delete', name: 'İstifadəçi sil', category: 'users', description: 'İstifadəçi silmə icazəsi' },
+  
   // Roles
-  { key: 'roles.view', name: 'Rolları Görüntülə', category: 'roles', description: 'Rolları görüntüləmək icazəsi' },
-  { key: 'roles.create', name: 'Rol Yarat', category: 'roles', description: 'Yeni rol yaratmaq icazəsi' },
-  { key: 'roles.edit', name: 'Rol Redaktə Et', category: 'roles', description: 'Rolları redaktə etmək icazəsi' },
-  { key: 'roles.delete', name: 'Rol Sil', category: 'roles', description: 'Rolları silmək icazəsi' },
-
-  // Advertisements
-  { key: 'advertisements.view', name: 'Reklamları Görüntülə', category: 'advertisements', description: 'Reklamları görüntüləmək icazəsi' },
-  { key: 'advertisements.create', name: 'Reklam Yarat', category: 'advertisements', description: 'Yeni reklam yaratmaq icazəsi' },
-  { key: 'advertisements.edit', name: 'Reklam Redaktə Et', category: 'advertisements', description: 'Reklamları redaktə etmək icazəsi' },
-  { key: 'advertisements.delete', name: 'Reklam Sil', category: 'advertisements', description: 'Reklamları silmək icazəsi' },
-
+  { key: 'roles.view', name: 'Rolları görüntülə', category: 'roles', description: 'Rolları görüntüləmə icazəsi' },
+  { key: 'roles.create', name: 'Rol yarat', category: 'roles', description: 'Yeni rol yaratma icazəsi' },
+  { key: 'roles.edit', name: 'Rol redaktə et', category: 'roles', description: 'Rol redaktə etmə icazəsi' },
+  { key: 'roles.delete', name: 'Rol sil', category: 'roles', description: 'Rol silmə icazəsi' },
+  
+  // Permissions
+  { key: 'permissions.view', name: 'İcazələri görüntülə', category: 'permissions', description: 'İcazələri görüntüləmə icazəsi' },
+  { key: 'permissions.create', name: 'İcazə yarat', category: 'permissions', description: 'Yeni icazə yaratma icazəsi' },
+  { key: 'permissions.edit', name: 'İcazə redaktə et', category: 'permissions', description: 'İcazə redaktə etmə icazəsi' },
+  { key: 'permissions.delete', name: 'İcazə sil', category: 'permissions', description: 'İcazə silmə icazəsi' },
+  
   // Media
-  { key: 'media.view', name: 'Medianı Görüntülə', category: 'media', description: 'Medianı görüntüləmək icazəsi' },
-  { key: 'media.upload', name: 'Media Yüklə', category: 'media', description: 'Media faylları yükləmək icazəsi' },
-  { key: 'media.delete', name: 'Media Sil', category: 'media', description: 'Media fayllarını silmək icazəsi' },
-
-  // Settings
-  { key: 'settings.view', name: 'Parametrləri Görüntülə', category: 'settings', description: 'Parametrləri görüntüləmək icazəsi' },
-  { key: 'settings.edit', name: 'Parametrləri Redaktə Et', category: 'settings', description: 'Parametrləri redaktə etmək icazəsi' },
+  { key: 'media.view', name: 'Media görüntülə', category: 'media', description: 'Media fayllarını görüntüləmə icazəsi' },
+  { key: 'media.upload', name: 'Media yüklə', category: 'media', description: 'Media faylı yükləmə icazəsi' },
+  { key: 'media.delete', name: 'Media sil', category: 'media', description: 'Media faylı silmə icazəsi' },
 ];
 
-async function seedPermissions() {
-  try {
-    console.log('İcazələr yaradılır...');
-
-    for (const perm of permissions) {
+async function main() {
+  console.log('Default icazələr yaradılır...');
+  
+  for (const permission of defaultPermissions) {
+    try {
       await prisma.permission.upsert({
-        where: { key: perm.key },
-        update: {},
-        create: perm,
-      });
-    }
-
-    console.log('İcazələr uğurla yaradıldı!');
-
-    // Default rolları yarat
-    console.log('Default rollar yaradılır...');
-
-    const adminRole = await prisma.role.upsert({
-      where: { key: 'admin' },
-      update: {},
-      create: {
-        key: 'admin',
-        name: 'Admin',
-        description: 'Tam icazələrə malik administrator',
-        isSystem: true,
-      },
-    });
-
-    const editorRole = await prisma.role.upsert({
-      where: { key: 'editor' },
-      update: {},
-      create: {
-        key: 'editor',
-        name: 'Redaktor',
-        description: 'Xəbərləri yarada və redaktə edə bilən redaktor',
-        isSystem: true,
-      },
-    });
-
-    // Admin rolünə bütün icazələri ver
-    const allPermissions = await prisma.permission.findMany();
-    await prisma.rolePermission.deleteMany({
-      where: { roleId: adminRole.id },
-    });
-    await prisma.rolePermission.createMany({
-      data: allPermissions.map((p) => ({
-        roleId: adminRole.id,
-        permissionId: p.id,
-      })),
-    });
-
-    // Editor rolünə məhdud icazələr ver
-    const editorPermissions = await prisma.permission.findMany({
-      where: {
-        key: {
-          in: [
-            'articles.view',
-            'articles.create',
-            'articles.edit',
-            'articles.publish',
-            'categories.view',
-            'tags.view',
-            'tags.create',
-            'media.view',
-            'media.upload',
-          ],
+        where: { key: permission.key },
+        update: {
+          name: permission.name,
+          category: permission.category,
+          description: permission.description,
         },
-      },
-    });
-    await prisma.rolePermission.deleteMany({
-      where: { roleId: editorRole.id },
-    });
-    await prisma.rolePermission.createMany({
-      data: editorPermissions.map((p) => ({
-        roleId: editorRole.id,
-        permissionId: p.id,
-      })),
-    });
-
-    console.log('Default rollar uğurla yaradıldı!');
-  } catch (error) {
-    console.error('Xəta:', error);
-  } finally {
-    await prisma.$disconnect();
+        create: permission,
+      });
+      console.log(`✅ ${permission.key} - ${permission.name}`);
+    } catch (error) {
+      console.error(`❌ ${permission.key} xətası:`, error);
+    }
   }
+  
+  console.log('\n✅ Bütün icazələr yaradıldı!');
 }
 
-seedPermissions();
-
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+    await pool.end();
+  });

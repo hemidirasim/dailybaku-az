@@ -10,7 +10,8 @@ export default async function ProtectedAdminLayout({
 }) {
   const session = await getServerSession(authOptions);
 
-  if (!session || (session.user as any).role !== 'admin') {
+  // Allow any authenticated user with a role (not just admin)
+  if (!session || !(session.user as any).role) {
     redirect('/admin/login');
   }
 
@@ -21,4 +22,3 @@ export default async function ProtectedAdminLayout({
     </div>
   );
 }
-

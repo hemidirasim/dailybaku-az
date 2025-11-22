@@ -1,0 +1,101 @@
+/* Print Styles - Yalnız article elementi çap edilir */
+@media print {
+  /* Bütün səhifəni gizlət */
+  body > *:not(article),
+  body > *:not(.print-container) {
+    display: none !important;
+  }
+
+  /* Yalnız article və onun konteynerini göstər */
+  article.lg\\:col-span-2,
+  article.lg\\:col-span-2 * {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  /* Article konteyneri */
+  .print-container,
+  .print-container article {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Digər elementləri gizlət */
+  header,
+  footer,
+  nav,
+  aside,
+  .sidebar,
+  .no-print,
+  button,
+  .button,
+  .lg\\:col-span-1 {
+    display: none !important;
+  }
+
+  /* Advertisement gizlət */
+  [class*="advertisement"],
+  [class*="Advertisement"] {
+    display: none !important;
+  }
+
+  /* ShareButtons gizlət */
+  .no-print {
+    display: none !important;
+  }
+
+  /* TopArticles gizlət */
+  [class*="TopArticles"] {
+    display: none !important;
+  }
+
+  /* Səhifə düzəlişləri */
+  @page {
+    margin: 1cm;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Şəkillər */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Linklər */
+  a {
+    color: black !important;
+    text-decoration: underline !important;
+  }
+
+  /* Prose content */
+  .prose {
+    max-width: 100% !important;
+  }
+
+  /* Author box - çap edilə bilər */
+  [class*="author"],
+  [class*="Author"] {
+    display: block !important;
+    border: 1px solid #ccc !important;
+    padding: 15px !important;
+    margin-top: 20px !important;
+  }
+
+  /* Şəkil qalereyası - çap edilə bilər */
+  [class*="gallery"],
+  [class*="Gallery"] {
+    display: block !important;
+    page-break-inside: avoid !important;
+  }
+}

@@ -1,14 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -16,16 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Image from 'next/image';
+import { Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
-
-const userSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().email('Düzgün email daxil edin'),
-  password: z.string().min(6, 'Şifrə ən azı 6 simvol olmalıdır').optional(),
-  role: z.enum(['admin', 'editor']),
-});
-
-type UserFormData = z.infer<typeof userSchema>;
 
 interface UserFormProps {
   user?: {
@@ -33,69 +24,77 @@ interface UserFormProps {
     name: string | null;
     email: string;
     role: string;
+    avatar: string | null;
+    bioAz: string | null;
+    bioEn: string | null;
   };
 }
-
-const ROLES = [
-  { value: 'admin', label: 'Admin' },
-  { value: 'editor', label: 'Redaktor' },
-];
 
 export default function UserForm({ user }: UserFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState(user?.role || 'editor');
+  const [avatar, setAvatar] = useState(user?.avatar || '');
+  const [bioAz, setBioAz] = useState(user?.bioAz || '');
+  const [bioEn, setBioEn] = useState(user?.bioEn || '');
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    watch,
-    setValue,
-  } = useForm<UserFormData>({
-    resolver: zodResolver(userSchema),
-    defaultValues: user
-      ? {
-          name: user.name || '',
-          email: user.email,
-          password: '',
-          role: user.role as 'admin' | 'editor',
-        }
-      : {
-          name: '',
-          email: '',
-          password: '',
-          role: 'editor',
-        },
-  });
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const onSubmit = async (data: UserFormData) => {
-    setLoading(true);
+    setUploading(true);
     try {
-      const url = user
-        ? `/api/admin/users/${user.id}`
-        : '/api/admin/users';
-      const method = user ? 'PUT' : 'POST';
+      const formData = new FormData();
+      formData.append('file', file);
 
-      // Şifrə yalnız yeni istifadəçi üçün və ya dəyişdirilərsə göndərilir
-      const requestData: any = {
-        name: data.name || null,
-        email: data.email,
-        role: data.role,
-      };
+      const response = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (!user || data.password) {
-        requestData.password = data.password;
+      if (!response.ok) {
+        throw new Error('Upload failed');
       }
+
+      const data = await response.json();
+      setAvatar(data.url);
+      toast.success('Avatar yükləndi');
+    } catch (error) {
+      toast.error('Avatar yüklənə bilmədi');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const url = user ? `/api/admin/users/${user.id}` : '/api/admin/users';
+      const method = user ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestData),
+        body: JSON.stringify({
+          name,
+          email,
+          password: password || undefined,
+          role,
+          avatar,
+          bioAz,
+          bioEn,
+        }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Xəta baş verdi');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Xəta baş verdi');
       }
 
       toast.success(user ? 'İstifadəçi yeniləndi' : 'İstifadəçi yaradıldı');
@@ -109,83 +108,138 @@ export default function UserForm({ user }: UserFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>İstifadəçi Məlumatları</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Sol sütun */}
+        <div className="space-y-4">
           <div>
-            <Label htmlFor="name">Ad</Label>
+            <Label htmlFor="name">Ad Soyad</Label>
             <Input
               id="name"
-              {...register('name')}
-              placeholder="İstifadəçi adı"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ad Soyad"
             />
           </div>
 
           <div>
-            <Label htmlFor="email">Email *</Label>
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
-              {...register('email')}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="email@example.com"
+              required
             />
-            {errors.email && (
-              <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
-            )}
           </div>
 
           <div>
-            <Label htmlFor="password">
-              Şifrə {user ? '(Yalnız dəyişdirmək istəyirsinizsə)' : '*'}
-            </Label>
+            <Label htmlFor="password">Şifrə {user && '(Boş buraxın, dəyişməmək üçün)'}</Label>
             <Input
               id="password"
               type="password"
-              {...register('password', { required: !user })}
-              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Şifrə"
+              required={!user}
             />
-            {errors.password && (
-              <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
-            )}
           </div>
 
           <div>
-            <Label htmlFor="role">Rol *</Label>
-            <Select
-              value={watch('role')}
-              onValueChange={(value) => setValue('role', value as 'admin' | 'editor')}
-            >
+            <Label htmlFor="role">Rol</Label>
+            <Select value={role} onValueChange={setRole}>
               <SelectTrigger>
-                <SelectValue placeholder="Rol seçin" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {ROLES.map((role) => (
-                  <SelectItem key={role.value} value={role.value}>
-                    {role.label}
-                  </SelectItem>
-                ))}
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="editor">Editor</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Sağ sütun - Avatar */}
+        <div className="space-y-4">
+          <div>
+            <Label>Avatar</Label>
+            <div className="space-y-2">
+              {avatar && (
+                <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-gray-200">
+                  <Image
+                    src={avatar}
+                    alt={name || 'Avatar'}
+                    fill
+                    className="object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAvatar('')}
+                    className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+              <div>
+                <Label htmlFor="avatar-upload" className="cursor-pointer">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
+                    <Upload className="h-6 w-6 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm text-gray-600">
+                      {avatar ? 'Avatar dəyişdir' : 'Avatar yüklə'}
+                    </p>
+                  </div>
+                </Label>
+                <Input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                  disabled={uploading}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bio - Tabs */}
+      <div>
+        <Label>Haqqında</Label>
+        <Tabs defaultValue="az" className="w-full mt-2">
+          <TabsList>
+            <TabsTrigger value="az">Azərbaycan</TabsTrigger>
+            <TabsTrigger value="en">English</TabsTrigger>
+          </TabsList>
+          <TabsContent value="az" className="mt-4">
+            <Textarea
+              value={bioAz}
+              onChange={(e) => setBioAz(e.target.value)}
+              placeholder="İstifadəçi haqqında məlumat (AZ)"
+              rows={4}
+            />
+          </TabsContent>
+          <TabsContent value="en" className="mt-4">
+            <Textarea
+              value={bioEn}
+              onChange={(e) => setBioEn(e.target.value)}
+              placeholder="İstifadəçi haqqında məlumat (EN)"
+              rows={4}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
 
       <div className="flex gap-4">
         <Button type="submit" disabled={loading}>
           {loading ? 'Saxlanılır...' : user ? 'Yenilə' : 'Yarat'}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-        >
+        <Button type="button" variant="outline" onClick={() => router.back()}>
           Ləğv et
         </Button>
       </div>
     </form>
   );
 }
-

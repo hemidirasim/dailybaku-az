@@ -1,39 +1,113 @@
-import { prisma } from '@/lib/prisma';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Upload, X, Image as ImageIcon, Grid3x3, Plus } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Grid3x3, Plus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
-export default async function MediaPage() {
-  const articles = await prisma.article.findMany({
-    include: {
-      images: true,
-    },
-  });
+interface ArticleImage {
+  id: string;
+  url: string;
+  alt?: string | null;
+  order: number;
+  isPrimary: boolean;
+}
 
-  let galleryTemplates: any[] = [];
-  try {
-    galleryTemplates = await prisma.galleryTemplate.findMany({
-      include: {
-        translations: true,
-        images: {
-          orderBy: {
-            order: 'asc',
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching gallery templates:', error);
-    // If the table doesn't exist yet, galleryTemplates will be empty array
-    galleryTemplates = [];
+export default function MediaPage() {
+  const router = useRouter();
+  const [images, setImages] = useState<ArticleImage[]>([]);
+  const [galleryTemplates, setGalleryTemplates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState<ArticleImage | null>(null);
+
+  useEffect(() => {
+    fetchImages();
+    fetchGalleryTemplates();
+  }, []);
+
+  const fetchImages = async () => {
+    try {
+      const response = await fetch('/api/admin/media');
+      if (!response.ok) {
+        throw new Error('Şəkillər yüklənə bilmədi');
+      }
+      const data = await response.json();
+      setImages(data.images || []);
+    } catch (error) {
+      console.error('Error fetching images:', error);
+      toast.error('Şəkillər yüklənə bilmədi');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchGalleryTemplates = async () => {
+    try {
+      const response = await fetch('/api/admin/gallery-templates');
+      if (response.ok) {
+        const data = await response.json();
+        setGalleryTemplates(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching gallery templates:', error);
+    }
+  };
+
+  const handleDeleteClick = (image: ArticleImage) => {
+    setImageToDelete(image);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!imageToDelete) return;
+
+    setDeletingId(imageToDelete.id);
+    try {
+      const response = await fetch(`/api/admin/media?id=${imageToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Şəkil silinə bilmədi');
+      }
+
+      toast.success('Şəkil uğurla silindi');
+      setImages(images.filter((img) => img.id !== imageToDelete.id));
+      setDeleteDialogOpen(false);
+      setImageToDelete(null);
+      router.refresh();
+    } catch (error: any) {
+      console.error('Error deleting image:', error);
+      toast.error(error.message || 'Şəkil silinə bilmədi');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
-
-  const allImages = articles.flatMap((article: typeof articles[0]) => article.images);
 
   return (
     <div>
@@ -53,7 +127,7 @@ export default async function MediaPage() {
         
         <TabsContent value="images" className="mt-6">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {allImages.map((image: typeof allImages[0]) => (
+            {images.map((image: ArticleImage) => (
               <div key={image.id} className="relative group aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
                 <Image
                   src={image.url}
@@ -62,15 +136,24 @@ export default async function MediaPage() {
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Button variant="destructive" size="sm">
-                    <X className="h-4 w-4" />
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => handleDeleteClick(image)}
+                    disabled={deletingId === image.id}
+                  >
+                    {deletingId === image.id ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
             ))}
           </div>
 
-          {allImages.length === 0 && (
+          {images.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               <ImageIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Hələ heç bir şəkil yüklənməyib</p>
@@ -91,11 +174,11 @@ export default async function MediaPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {galleryTemplates.map((template: typeof galleryTemplates[0]) => {
-              const azName = template.translations.find((t: { locale: string }) => t.locale === 'az')?.name || template.slug;
+              const azName = template.translations?.find((t: { locale: string }) => t.locale === 'az')?.name || template.slug;
               return (
                 <div key={template.id} className="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="relative aspect-video bg-gray-100">
-                    {template.images.length > 0 ? (
+                    {template.images && template.images.length > 0 ? (
                       <div className={`grid gap-1 h-full p-2 ${
                         template.type === 'grid' 
                           ? `grid-cols-${Math.min(template.columns, template.images.length)}`
@@ -153,7 +236,27 @@ export default async function MediaPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Şəkili silmək istədiyinizə əminsiniz?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu əməliyyat geri alına bilməz. Şəkil databazadan və serverdən tamamilə silinəcək.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Ləğv et</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
-

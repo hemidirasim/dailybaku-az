@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, email, password, role } = body;
+    const { name, email, password, role, avatar, bioAz, bioEn } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -41,6 +41,9 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         role: role || 'editor',
+        avatar: avatar || null,
+        bioAz: bioAz || null,
+        bioEn: bioEn || null,
       },
     });
 
@@ -56,7 +59,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || (session.user as any).role !== 'admin') {
@@ -69,8 +72,10 @@ export async function GET() {
         name: true,
         email: true,
         role: true,
+        avatar: true,
+        bioAz: true,
+        bioEn: true,
         createdAt: true,
-        updatedAt: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -85,4 +90,3 @@ export async function GET() {
     );
   }
 }
-

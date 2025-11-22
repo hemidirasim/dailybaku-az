@@ -1,30 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { az, enUS } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
-import useEmblaCarousel from 'embla-carousel-react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-const demoImages = [
-  'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/1591055/pexels-photo-1591055.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184460/pexels-photo-3184460.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184357/pexels-photo-3184357.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184306/pexels-photo-3184306.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184325/pexels-photo-3184325.jpeg?auto=compress&cs=tinysrgb&w=800',
-];
 
 async function getFeaturedArticles(locale: string = 'az') {
   try {
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3063');
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/articles/featured?locale=${locale}&limit=5`,
+      `${baseUrl}/api/articles/featured?locale=${locale}&limit=5`,
       { cache: 'no-store' }
     );
     
@@ -33,7 +20,7 @@ async function getFeaturedArticles(locale: string = 'az') {
     const articles = await response.json();
     return articles.map((article: any, index: number) => ({
       ...article,
-      image_url: article.image_url || demoImages[index % demoImages.length],
+      image_url: article.image_url || article.image || article.imageUrl || `https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800`,
     }));
   } catch (error) {
     console.error('Error fetching featured articles:', error);
@@ -43,8 +30,9 @@ async function getFeaturedArticles(locale: string = 'az') {
 
 async function getRecentArticles(locale: string = 'az') {
   try {
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3063');
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/articles/recent?locale=${locale}&limit=5`,
+      `${baseUrl}/api/articles/recent?locale=${locale}&limit=20`,
       { cache: 'no-store' }
     );
     
@@ -62,105 +50,201 @@ export default function FeaturedWithNewsList() {
   const [featuredArticles, setFeaturedArticles] = useState<any[]>([]);
   const [recentArticles, setRecentArticles] = useState<any[]>([]);
   const [locale, setLocale] = useState('az');
-  const [emblaRef, emblaApi] = useEmblaCarousel({ 
-    loop: true, 
-    dragFree: false,
-    align: 'start',
-  });
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const segments = pathname.split('/');
     const currentLocale = segments[1] === 'en' ? 'en' : 'az';
     setLocale(currentLocale);
+    setLoading(true);
 
-    getFeaturedArticles(currentLocale).then(setFeaturedArticles);
-    getRecentArticles(currentLocale).then(setRecentArticles);
+    Promise.all([
+      getFeaturedArticles(currentLocale).then((articles) => {
+        console.log('FeaturedWithNewsList - Featured articles loaded:', articles.length);
+        setFeaturedArticles(articles);
+        return articles;
+      }),
+      getRecentArticles(currentLocale).then((articles) => {
+        console.log('FeaturedWithNewsList - Recent articles loaded:', articles.length);
+        setRecentArticles(articles);
+        return articles;
+      })
+    ]).finally(() => {
+      setLoading(false);
+    });
   }, [pathname]);
 
   const displayFeatured = featuredArticles;
   const displayRecent = recentArticles;
 
-  const scrollPrev = () => emblaApi?.scrollPrev();
-  const scrollNext = () => emblaApi?.scrollNext();
+  // Auto-play slider
+  useEffect(() => {
+    if (displayFeatured.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev === displayFeatured.length - 1 ? 0 : prev + 1));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [displayFeatured.length]);
 
-  // Don't render if no articles
-  if (displayFeatured.length === 0 && displayRecent.length === 0) {
-    return null;
+  const scrollPrev = () => setCurrentSlide((prev) => (prev === 0 ? displayFeatured.length - 1 : prev - 1));
+  const scrollNext = () => setCurrentSlide((prev) => (prev === displayFeatured.length - 1 ? 0 : prev + 1));
+
+  // Always render component
+  if (loading) {
+    return (
+      <div className="border-b border-gray-200 pb-6 bg-white min-h-[500px]" data-testid="featured-with-news-list">
+        <div className="max-w-7xl mx-auto px-4 py-12 text-center text-gray-500">
+          <p>Xəbərlər yüklənir...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="border-b border-gray-200 pb-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="border-b border-gray-200 pb-6 bg-white" data-testid="featured-with-news-list">
+      <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Featured Article Slider - Left Side */}
-          <div className="lg:col-span-2 relative">
-            {displayFeatured.length > 0 ? (
-              <>
-                <div className="overflow-hidden rounded-lg" ref={emblaRef}>
-                  <div className="flex">
-                    {displayFeatured.map((article: any) => (
-                      <div key={article.id} className="flex-[0_0_100%] min-w-0 relative h-[500px]">
-                        <Link
-                          href={article.slug ? `/${locale}/article/${article.slug}` : '#'}
-                          className="group block relative h-full w-full overflow-hidden rounded-lg"
-                        >
-                          <Image
-                            src={article.image_url || 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                            alt={article.title}
-                            fill
-                            className="object-cover transition-transform group-hover:scale-105 grayscale"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                          <div className="absolute top-4 left-4">
-                            <div className="bg-red-600 text-white px-3 py-2 text-xs font-bold uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                              {article.category || 'SPORT'}
+          {/* Sol tərəf - 2 div: Manşet və Yeni Blok */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Div 1: Manşet Slider */}
+            <div className="relative">
+              {displayFeatured.length > 0 ? (
+                <>
+                  <div className="overflow-hidden rounded-lg relative">
+                    <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
+                      {displayFeatured.map((article: any) => (
+                        <div key={article.id} className="flex-[0_0_100%] min-w-0 relative h-[500px]">
+                          <Link
+                            href={article.slug ? `/${locale}/article/${article.slug}` : '#'}
+                            className="group block relative h-full w-full overflow-hidden rounded-lg"
+                          >
+                            <img
+                              src={article.image_url || article.image || article.imageUrl || 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800'}
+                              alt={article.title}
+                              className="object-cover transition-transform group-hover:scale-105 w-full h-full"
+                              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                            <div className="absolute top-4 left-4">
+                              <div className="bg-red-600 text-white px-3 py-2 text-xs font-bold uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+                                {article.category || 'SPORT'}
+                              </div>
                             </div>
-                          </div>
-                          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                            <h2 className="text-3xl font-bold mb-2 group-hover:text-red-600 transition-colors">
-                              {article.title}
-                            </h2>
-                            {article.excerpt && (
-                              <p className="text-gray-200 mb-2">{article.excerpt}</p>
-                            )}
-                            <div className="flex items-center gap-2 text-sm text-gray-300">
-                              <span>{formatDistanceToNow(new Date(article.published_at), { 
-                                addSuffix: true,
-                                locale: locale === 'az' ? az : enUS
-                              })}</span>
+                            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                              <h2 className="text-3xl font-bold mb-2 group-hover:text-red-600 transition-colors">
+                                {article.title}
+                              </h2>
+                              {article.excerpt && (
+                                <p className="text-gray-200 mb-2">{article.excerpt}</p>
+                              )}
+                              <div className="flex items-center gap-2 text-sm text-gray-300">
+                                <span>{formatDistanceToNow(new Date(article.published_at), { 
+                                  addSuffix: true,
+                                  locale: locale === 'az' ? az : enUS
+                                })}</span>
+                              </div>
                             </div>
-                          </div>
-                        </Link>
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Navigation Buttons */}
+                  <button
+                    onClick={scrollPrev}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                    aria-label="Previous slide"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={scrollNext}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                    aria-label="Next slide"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground bg-gray-50 rounded-lg">
+                  <p>{locale === 'az' ? 'Featured xəbərlər yoxdur' : 'No featured articles'}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Div 2: Yeni Blok - Solda 1 böyük xəbər, Sağda 4 kiçik xəbər */}
+            {displayRecent.length > 0 && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Sol tərəf - 1 böyük xəbər */}
+                <div className="lg:col-span-2">
+                  {displayRecent[0] && (
+                    <Link
+                      href={`/${locale}/article/${displayRecent[0].slug}`}
+                      className="block group"
+                    >
+                      <div className="relative w-full h-[400px] mb-4 rounded-lg overflow-hidden">
+                        <img
+                          src={displayRecent[0].image || displayRecent[0].imageUrl || displayRecent[0].image_url || "/demo/news1.jpg"}
+                          alt={displayRecent[0].title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
                       </div>
+                      <h3 className="text-2xl font-bold mb-3 group-hover:text-red-600 transition-colors">
+                        {displayRecent[0].title}
+                      </h3>
+                      {displayRecent[0].published_at && (
+                        <p className="text-sm text-gray-500">
+                          {new Date(displayRecent[0].published_at).toLocaleDateString(
+                            locale === 'az' ? 'az-AZ' : 'en-US',
+                            { day: 'numeric', month: 'long', year: 'numeric' }
+                          )}
+                        </p>
+                      )}
+                    </Link>
+                  )}
+                </div>
+
+                {/* Sağ tərəf - 4 kiçik xəbər */}
+                <div className="lg:col-span-1">
+                  <div className="space-y-4">
+                    {displayRecent.slice(1, 5).map((article, index) => (
+                      <Link
+                        key={article.id || index}
+                        href={`/${locale}/article/${article.slug}`}
+                        className="flex gap-3 group"
+                      >
+                        <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
+                          <img
+                            src={article.image || article.imageUrl || article.image_url || "/demo/news1.jpg"}
+                            alt={article.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-bold mb-2 group-hover:text-red-600 transition-colors ">
+                            {article.title}
+                          </h4>
+                          {article.published_at && (
+                            <p className="text-xs text-gray-500">
+                              {new Date(article.published_at).toLocaleDateString(
+                                locale === 'az' ? 'az-AZ' : 'en-US',
+                                { day: 'numeric', month: 'long', year: 'numeric' }
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
-                {/* Navigation Buttons */}
-                <button
-                  onClick={scrollPrev}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
-                  aria-label="Previous slide"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-                <button
-                  onClick={scrollNext}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
-                  aria-label="Next slide"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-              </>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <p>{locale === 'az' ? 'Featured xəbərlər yoxdur' : 'No featured articles'}</p>
               </div>
             )}
           </div>
 
-          {/* News List - Right Side */}
+          {/* Sağ tərəf - 1 div: Xəbər lenti */}
           <div className="lg:col-span-1">
-            <div className="border rounded-lg p-6 bg-white">
+            <div className="border rounded-lg p-6 bg-white sticky top-4">
               <h3 className="text-lg font-bold mb-4">
                 <span className="text-red-600">Xəbər lenti</span>
               </h3>
@@ -207,4 +291,3 @@ export default function FeaturedWithNewsList() {
     </div>
   );
 }
-

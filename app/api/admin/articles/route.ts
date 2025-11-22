@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
         authorId: finalAuthorId,
         categoryId: categoryId || null,
         featured: featured || false,
+        agenda: body.agenda || false,
         status: status || 'draft',
         publishedAt: publishedAt ? new Date(publishedAt) : null,
         translations: {

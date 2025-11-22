@@ -14,8 +14,17 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { authorId, categoryId, featured, status, publishedAt, az, en, images, tagIds } = body;
+    const { authorId, categoryId, featured, agenda, status, publishedAt, az, en, images, tagIds } = body;
     const { id } = await params;
+
+    // Əvvəlcə mövcud article-i tap
+    const existing = await prisma.article.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+    }
 
     // Delete existing translations, images, and tags
     await Promise.all([
@@ -36,7 +45,8 @@ export async function PUT(
       data: {
         authorId: authorId ?? undefined,
         categoryId: categoryId || null,
-        featured: featured || false,
+        featured: featured !== undefined ? featured : existing.featured,
+        agenda: agenda !== undefined ? agenda : (existing.agenda || false),
         status: status || 'draft',
         publishedAt: publishedAt ? new Date(publishedAt) : null,
         translations: {
@@ -111,3 +121,48 @@ export async function DELETE(
   }
 }
 
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user as any).role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const article = await prisma.article.findUnique({
+      where: { id },
+      include: {
+        translations: true,
+        category: {
+          include: {
+            translations: true,
+          },
+        },
+        images: true,
+        tags: {
+          include: {
+            tag: {
+              include: {
+                translations: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!article) {
+      return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(article);
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || 'Xəta baş verdi' },
+      { status: 500 }
+    );
+  }
+}

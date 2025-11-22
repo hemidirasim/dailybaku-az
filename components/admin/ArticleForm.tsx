@@ -52,6 +52,7 @@ const articleSchema = z.object({
   authorId: z.string().optional().nullable(),
   categoryId: z.string().optional().nullable(),
   featured: z.boolean().default(false),
+  agenda: z.boolean().default(false),
   status: z.string().default('draft'), // 'draft' or 'published'
   publishedAt: z.string().optional().nullable(),
   az: z.object({
@@ -83,6 +84,7 @@ interface ArticleFormProps {
     authorId: string | null;
     categoryId: string | null;
     featured: boolean;
+    agenda: boolean;
     status: string;
     publishedAt: Date | null;
     translations: Array<{
@@ -118,6 +120,7 @@ interface ArticleFormProps {
     }>;
   }>;
   users?: ArticleUser[];
+  defaultAuthorId?: string | null;
 }
 
 // Slug oluşturma fonksiyonu
@@ -132,11 +135,12 @@ const generateSlug = (text: string): string => {
 
 const fallbackSlug = (locale: string) => `${locale}-${Date.now()}`;
 
-export default function ArticleForm({ article, categories = [], users = [] }: ArticleFormProps) {
+export default function ArticleForm({ article, categories = [], users = [], defaultAuthorId }: ArticleFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [images, setImages] = useState<Array<{ url: string; alt?: string; caption?: string; order: number; isPrimary: boolean }>>(
+  const [images, setImages] = useState<Array<{ url: string; alt?: string; caption?: string; order: number; isPrimary: boolean }
+>>(
     article?.images.map((img) => ({
       url: img.url,
       alt: img.alt || '',
@@ -260,6 +264,7 @@ export default function ArticleForm({ article, categories = [], users = [] }: Ar
           authorId: article.authorId || null,
           categoryId: article.categoryId || null,
           featured: article.featured,
+          agenda: article.agenda || false,
           status: article.status || 'draft',
           publishedAt: article.publishedAt
             ? new Date(article.publishedAt).toISOString().slice(0, 16) // YYYY-MM-DDTHH:mm formatı
@@ -278,9 +283,10 @@ export default function ArticleForm({ article, categories = [], users = [] }: Ar
           },
         }
       : {
-          authorId: null,
+          authorId: defaultAuthorId || null,
           categoryId: null,
           featured: false,
+          agenda: false,
           status: 'draft',
           publishedAt: new Date().toISOString().slice(0, 16), // Cari tarix və saat
           az: { title: '', slug: '', excerpt: '', content: '' },
@@ -777,6 +783,14 @@ export default function ArticleForm({ article, categories = [], users = [] }: Ar
                   onCheckedChange={(checked) => setValue('featured', checked)}
                 />
                 <Label htmlFor="featured">Featured</Label>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="agenda"
+                  checked={watch('agenda')}
+                  onCheckedChange={(checked) => setValue('agenda', checked)}
+                />
+                <Label htmlFor="agenda">Agenda</Label>
+              </div>
               </div>
 
               <div>

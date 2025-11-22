@@ -96,14 +96,6 @@
   }
 }
 
-.animate-scroll {
-  animation: scroll-news 30s linear infinite;
-}
-
-.animate-scroll:hover {
-  animation-play-state: paused;
-}
-
 /* Quill Editor Height Styles */
 .quill-editor-wrapper {
   height: 240px;
@@ -185,4 +177,19 @@
   p, li {
     page-break-inside: avoid;
   }
+}
+
+/* HeaderNews Scroll Animation - Sağdan sola hərəkət */
+
+.animate-scroll {
+  animation: scroll-news 60s linear infinite;
+  display: inline-flex;
+  flex-direction: row;
+  gap: 1rem;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.animate-scroll:hover {
+  animation-play-state: paused;
 }

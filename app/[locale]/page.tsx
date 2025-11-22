@@ -1,5 +1,4 @@
 import FeaturedWithNewsList from '@/components/FeaturedWithNewsList';
-import GundemSection from '@/components/GundemSection';
 import ArticleDetailSection from '@/components/ArticleDetailSection';
 import RegionalNewsSection from '@/components/RegionalNewsSection';
 import WorldReportSection from '@/components/WorldReportSection';
@@ -14,15 +13,10 @@ export default async function Home({
 
   return (
     <div className="min-h-screen">
-      {/* Featured Article with News List Section */}
+      {/* Featured Article with News List Section (includes Gündəm) */}
       <div className="max-w-7xl mx-auto px-4 pt-6">
         <Advertisement position="content-top" locale={locale} />
         <FeaturedWithNewsList />
-      </div>
-
-      {/* Gündəm Section */}
-      <div className="max-w-7xl mx-auto px-4 pt-6">
-        <GundemSection />
       </div>
 
       {/* Article Detail Section */}

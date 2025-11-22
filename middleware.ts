@@ -17,8 +17,9 @@ export default withAuth(
       return NextResponse.redirect(new URL('/admin/login', req.url));
     }
 
-    // Check admin role
-    if (isAdminRoute && token && (token as any).role !== 'admin') {
+    // Allow any authenticated user with a role (not just admin)
+    // If you want to restrict to specific roles, you can modify this check
+    if (isAdminRoute && token && !(token as any).role) {
       return NextResponse.redirect(new URL('/admin/login', req.url));
     }
 
@@ -34,8 +35,10 @@ export default withAuth(
           return true;
         }
 
+        // Allow any authenticated user with a role to access admin panel
+        // Modify this to restrict to specific roles if needed
         if (isAdminRoute) {
-          return !!token && (token as any).role === 'admin';
+          return !!token && !!(token as any).role;
         }
 
         return true;
@@ -47,4 +50,3 @@ export default withAuth(
 export const config = {
   matcher: ['/admin/:path*'],
 };
-

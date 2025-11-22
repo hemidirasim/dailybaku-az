@@ -17,27 +17,36 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     setError('');
     setLoading(true);
 
     try {
+      console.log('Login attempt:', { email, password: '***' });
+      
       const result = await signIn('credentials', {
-        email,
-        password,
+        email: email.trim(),
+        password: password,
         redirect: false,
       });
 
+      console.log('SignIn result:', result);
+
       if (result?.error) {
+        console.error('SignIn error:', result.error);
         setError('Email və ya şifrə yanlışdır. Zəhmət olmasa yenidən cəhd edin.');
       } else if (result?.ok) {
-        router.push('/admin');
-        router.refresh();
+        console.log('Login successful, redirecting...');
+        window.location.href = '/admin';
       } else {
+        console.error('SignIn failed - no error, no ok:', result);
         setError('Giriş uğursuz oldu. Zəhmət olmasa yenidən cəhd edin.');
       }
     } catch (err) {
+      console.error('Login exception:', err);
       setError('Xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
     } finally {
       setLoading(false);
@@ -54,7 +63,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} method="POST" className="space-y-4">
             {error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -65,21 +74,27 @@ export default function LoginPage() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loading}
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Şifrə</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={loading}
+                autoComplete="current-password"
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
@@ -91,4 +106,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

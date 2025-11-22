@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
 import HeaderNews from '@/components/HeaderNews';
+import TopArticles from '@/components/TopArticles';
 import Footer from '@/components/Footer';
 import { prisma } from '@/lib/prisma';
 
@@ -88,7 +89,7 @@ async function getMenus(locale: string, location: 'header' | 'footer' = 'header'
           childUrl = `/${locale}/category/${category.slug}`;
         }
       } else if (child.type === 'page' && child.targetId) {
-        const page = pages.find((p: { id: string }) => p.id === child.targetId);
+        const page = pages.find((p: { id: string }) => p.id === menu.targetId);
         if (page) {
           const pageTranslation = page.translations.find((t: { locale: string }) => t.locale === locale);
           if (pageTranslation) {
@@ -138,9 +139,9 @@ export default async function LocaleLayout({
         menus={headerMenus}
         locale={locale}
       />
+      <div className="hidden lg:block"><TopArticles /></div>
       {children}
       <Footer menus={footerMenus} locale={locale} />
     </>
   );
 }
-

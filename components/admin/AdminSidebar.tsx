@@ -15,26 +15,49 @@ import {
   Home,
   Megaphone,
   Users,
-  File
+  File,
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { usePermissions } from '@/hooks/usePermissions';
 
-const menuItems = [
-  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/articles', label: 'Xəbərlər', icon: FileText },
-  { href: '/admin/categories', label: 'Bölmələr', icon: Folder },
-  { href: '/admin/tags', label: 'Taglar', icon: Tag },
-  { href: '/admin/menus', label: 'Menular', icon: MenuIcon },
-  { href: '/admin/pages', label: 'Statik Səhifələr', icon: File },
-  { href: '/admin/advertisements', label: 'Reklamlar', icon: Megaphone },
-  { href: '/admin/users', label: 'İstifadəçilər', icon: Users },
-  { href: '/admin/media', label: 'Media', icon: ImageIcon },
-  { href: '/admin/settings', label: 'Parametrlər', icon: Settings },
+interface MenuItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  permission?: string; // Permission key required for this menu item
+}
+
+const menuItems: MenuItem[] = [
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, permission: 'dashboard.view' },
+  { href: '/admin/articles', label: 'Xəbərlər', icon: FileText, permission: 'articles.view' },
+  { href: '/admin/categories', label: 'Bölmələr', icon: Folder, permission: 'categories.view' },
+  { href: '/admin/tags', label: 'Taglar', icon: Tag, permission: 'tags.view' },
+  { href: '/admin/menus', label: 'Menular', icon: MenuIcon, permission: 'menus.view' },
+  { href: '/admin/pages', label: 'Statik Səhifələr', icon: File, permission: 'pages.view' },
+  { href: '/admin/advertisements', label: 'Reklamlar', icon: Megaphone, permission: 'advertisements.view' },
+  { href: '/admin/users', label: 'İstifadəçilər', icon: Users, permission: 'users.view' },
+  { href: '/admin/roles', label: 'Rollar', icon: Shield, permission: 'roles.view' },
+  { href: '/admin/media', label: 'Media', icon: ImageIcon, permission: 'media.view' },
+  { href: '/admin/settings', label: 'Parametrlər', icon: Settings, permission: 'settings.view' },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const { hasPermission, loading } = usePermissions();
+
+  // Filter menu items based on permissions
+  const visibleMenuItems = menuItems.filter((item) => {
+    // If no permission required, show it
+    if (!item.permission) return true;
+    
+    // If loading, don't show yet
+    if (loading) return false;
+    
+    // Check if user has permission
+    return hasPermission(item.permission);
+  });
 
   return (
     <div className="w-64 bg-gray-900 text-white min-h-screen flex flex-col">
@@ -55,7 +78,7 @@ export default function AdminSidebar() {
       </div>
       
       <nav className="flex-1 p-4 space-y-2">
-        {menuItems.map((item) => {
+        {visibleMenuItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           
@@ -90,4 +113,3 @@ export default function AdminSidebar() {
     </div>
   );
 }
-

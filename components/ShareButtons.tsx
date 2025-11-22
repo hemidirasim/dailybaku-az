@@ -57,6 +57,7 @@ export default function ShareButtons({ title, url, locale = 'az' }: ShareButtons
   };
 
   const handlePrint = () => {
+    // Print CSS avtomatik olaraq yalnız article elementi göstərəcək
     window.print();
   };
 
@@ -122,4 +123,3 @@ export default function ShareButtons({ title, url, locale = 'az' }: ShareButtons
     </div>
   );
 }
-

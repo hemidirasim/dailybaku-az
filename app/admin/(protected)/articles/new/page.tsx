@@ -21,11 +21,13 @@ export default async function NewArticlePage() {
     }),
   ]);
 
+  // Admin user-i tap
+  const adminUser = users.find((user) => user.role === 'admin');
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-8">Yeni Xəbər</h1>
-      <ArticleForm categories={categories} users={users} />
+      <ArticleForm categories={categories} users={users} defaultAuthorId={adminUser?.id || null} />
     </div>
   );
 }
-

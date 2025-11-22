@@ -1,20 +1,22 @@
 import { prisma } from '@/lib/prisma';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, User, Eye } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
+import TopArticles from '@/components/TopArticles';
+import ArticleGallery from '@/components/ArticleGallery';
 import { Advertisement } from '@/components/Advertisement';
 import ShareButtons from '@/components/ShareButtons';
 
 async function getArticle(slug: string, locale: string) {
+  // Əvvəlcə bu slug ilə hər hansı bir translation-da article axtaraq
   const article = await prisma.article.findFirst({
     where: {
       translations: {
         some: {
           slug,
-          locale,
         },
       },
       status: 'published',
@@ -32,17 +34,24 @@ async function getArticle(slug: string, locale: string) {
           translations: true,
         },
       },
-      author: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
+      author: true,
     },
   });
 
   if (!article) return null;
+
+  // Seçilmiş dil üçün translation tapmağa çalışaq
+  const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
+
+  // Əgər seçilmiş dil üçün translation yoxdursa, redirect et
+  if (!translation) {
+    return { redirect: true, locale };
+  }
+
+  // Əgər translation varsa amma title boşdursa, redirect et
+  if (!translation.title || translation.title.trim() === '') {
+    return { redirect: true, locale };
+  }
 
   // Views sayını artır
   await prisma.article.update({
@@ -50,15 +59,15 @@ async function getArticle(slug: string, locale: string) {
     data: { views: article.views + 1 },
   });
 
-  const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
   const categoryTranslation = article.category?.translations.find((t: { locale: string }) => t.locale === locale);
 
   return {
     ...article,
-    title: translation?.title || '',
-    slug: translation?.slug || '',
-    excerpt: translation?.excerpt || '',
-    content: translation?.content || '',
+    redirect: false,
+    title: translation.title || '',
+    slug: translation.slug || '',
+    excerpt: translation.excerpt || '',
+    content: translation.content || '',
     category: article.category
       ? {
           id: article.category.id,
@@ -66,7 +75,13 @@ async function getArticle(slug: string, locale: string) {
           name: categoryTranslation?.name || article.category.slug,
         }
       : null,
-    author: article.author?.name || article.author?.email || 'Admin',
+    author: article.author ? {
+      id: article.author.id,
+      name: article.author.name || article.author.email || 'Admin',
+      email: article.author.email,
+      avatar: article.author.avatar,
+      bio: locale === 'az' ? article.author.bioAz : article.author.bioEn,
+    } : null,
     image_url: article.images.find((img: { isPrimary: boolean }) => img.isPrimary)?.url || article.images[0]?.url || null,
     images: article.images,
     views: article.views + 1,
@@ -79,9 +94,10 @@ async function getRecentArticles(locale: string) {
     where: {
       status: 'published',
       deletedAt: null,
-      publishedAt: {
-        lte: new Date(),
-      },
+      OR: [
+        { publishedAt: null },
+        { publishedAt: { lte: new Date() } }
+      ],
     },
     include: {
       translations: true,
@@ -95,20 +111,29 @@ async function getRecentArticles(locale: string) {
     orderBy: {
       publishedAt: 'desc',
     },
-    take: 5,
+    take: 10, // Daha çox götür ki, title-i olmayanları filter etdikdən sonra kifayət qədər olsun
   });
 
-  return articles.map((article: typeof articles[0]) => {
-    const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
-    return {
-      id: article.id,
-      title: translation?.title || '',
-      slug: translation?.slug || '',
-      excerpt: translation?.excerpt || '',
-      image_url: article.images[0]?.url || null,
-      published_at: article.publishedAt,
-    };
-  });
+  return articles
+    .map((article: typeof articles[0]) => {
+      const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
+      
+      // Əgər translation yoxdursa və ya title boşdursa, null qaytar
+      if (!translation || !translation.title || translation.title.trim() === '') {
+        return null;
+      }
+      
+      return {
+        id: article.id,
+        title: translation.title,
+        slug: translation.slug || '',
+        excerpt: translation.excerpt || '',
+        image_url: article.images[0]?.url || null,
+        published_at: article.publishedAt,
+      };
+    })
+    .filter((article): article is NonNullable<typeof article> => article !== null)
+    .slice(0, 5); // Son 5 qədər götür
 }
 
 export default async function ArticlePage({
@@ -122,8 +147,15 @@ export default async function ArticlePage({
     getRecentArticles(locale),
   ]);
 
+  // Əgər article tapılmadısa, 404
   if (!article) {
     notFound();
+  }
+
+  // Əgər article tapıldı amma translation yoxdursa və ya title boşdursa,
+  // seçilmiş dilin əsas səhifəsinə redirect
+  if ((article as any).redirect) {
+    redirect(`/${locale}`);
   }
 
   return (
@@ -151,10 +183,15 @@ export default async function ArticlePage({
             </div>
 
             <div className="flex items-center gap-6 text-sm text-muted-foreground mb-6">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <span>{article.author}</span>
-              </div>
+              {article.author && (
+                <Link 
+                  href={`/${locale}/author/${article.author.id}`}
+                  className="flex items-center gap-2 hover:text-red-600 transition-colors"
+                >
+                  <User className="h-4 w-4" />
+                  <span>{article.author.name}</span>
+                </Link>
+              )}
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 <span>
@@ -196,6 +233,11 @@ export default async function ArticlePage({
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
 
+            {/* Şəkil Qalereyası - Content-dən sonra */}
+            {article.images && article.images.length > 1 && (
+              <ArticleGallery images={article.images} title={article.title} />
+            )}
+
             <div className="mt-8 pt-6 border-t">
               <ShareButtons 
                 title={article.title} 
@@ -204,34 +246,52 @@ export default async function ArticlePage({
               />
             </div>
             
-            {/* Şəkil qalereyası */}
-            {article.images && article.images.length > 1 && (
-              <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4">
-                {article.images
-                  .filter((img: { isPrimary: boolean }) => !img.isPrimary)
-                  .map((image: { id: string; url: string; alt?: string | null; caption?: string | null }) => (
-                    <div key={image.id} className="relative aspect-video rounded-lg overflow-hidden">
+            {/* Author Info Box */}
+            {article.author && (
+              <div className="mt-8 bg-gray-50 rounded-lg p-6 border border-gray-200">
+                <Link 
+                  href={`/${locale}/author/${article.author.id}`}
+                  className="flex flex-col md:flex-row items-start md:items-center gap-4 hover:opacity-80 transition-opacity group"
+                >
+                  {article.author.avatar ? (
+                    <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-gray-300 flex-shrink-0">
                       <Image
-                        src={image.url}
-                        alt={image.alt || article.title}
+                        src={article.author.avatar}
+                        alt={article.author.name}
                         fill
-                        className="object-cover"
+                        className="object-cover group-hover:scale-110 transition-transform"
                       />
-                      {image.caption && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-2">
-                          {image.caption}
-                        </div>
-                      )}
                     </div>
-                  ))}
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center text-2xl font-bold text-gray-600 flex-shrink-0">
+                      {article.author.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg mb-1 group-hover:text-red-600 transition-colors">
+                      {article.author.name}
+                    </h3>
+                    {article.author.bio && (
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {article.author.bio}
+                      </p>
+                    )}
+                  </div>
+                </Link>
               </div>
             )}
+            
             <Advertisement position="article-bottom" locale={locale} />
           </article>
 
           <div className="lg:col-span-1">
             <Sidebar recentArticles={recentArticles} />
           </div>
+        </div>
+
+        {/* TopArticles - Mobile versiyada article-dan sonra */}
+        <div className="lg:hidden mt-8">
+          <TopArticles locale={locale} />
         </div>
       </div>
     </div>

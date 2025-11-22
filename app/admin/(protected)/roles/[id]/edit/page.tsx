@@ -34,17 +34,7 @@ export default async function EditRolePage({
   return (
     <div>
       <h1 className="text-3xl font-bold mb-8">Rol Redaktəsi</h1>
-      <RoleForm
-        role={{
-          ...role,
-          rolePermissions: role.rolePermissions.map((rp: typeof role.rolePermissions[0]) => ({
-            permissionId: rp.permissionId,
-            permission: rp.permission,
-          })),
-        }}
-        permissions={permissions}
-      />
+      <RoleForm role={role} permissions={permissions} />
     </div>
   );
 }
-

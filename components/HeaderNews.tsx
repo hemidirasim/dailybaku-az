@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 async function getLatestArticles(locale: string) {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/articles/recent?locale=${locale}&limit=5`,
+      `${typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')}/api/articles/recent?locale=${locale}&limit=5`,
       { cache: 'no-store' }
     );
     
@@ -35,9 +35,9 @@ export default function HeaderNews() {
 
   const latestLabel = locale === 'az' ? 'SON XƏBƏRLƏR' : 'LATEST';
 
-  // Duplicate articles for seamless loop (only if we have articles)
+  // Duplicate articles for seamless loop (4 times for smooth scrolling)
   const duplicatedArticles = articles.length > 0 
-    ? [...articles, ...articles]
+    ? [...articles, ...articles, ...articles, ...articles] 
     : [];
 
   // Don't render if no articles
@@ -50,24 +50,24 @@ export default function HeaderNews() {
       <div className="max-w-7xl mx-auto flex items-center gap-4 relative">
         <div className="bg-black text-white px-3 py-1.5 flex items-center gap-1.5 whitespace-nowrap rounded z-10 flex-shrink-0">
           <div className="w-3 h-3 rounded-full border-2 border-white flex items-center justify-center">
-            <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
           </div>
           <span className="text-xs font-bold uppercase">{latestLabel}</span>
         </div>
         <div className="flex-1 overflow-hidden relative">
-          <div className="flex items-center gap-4 text-sm text-black animate-scroll">
+          <div className="animate-scroll">
             {duplicatedArticles.map((article, index) => {
               if (!article || !article.title) return null;
               return (
-                <div key={`${article.id || index}-${index}`} className="flex items-center gap-4 whitespace-nowrap flex-shrink-0">
+                <span key={`${article.id || index}-${index}`} className="inline-flex items-center gap-4 whitespace-nowrap flex-shrink-0 mr-4">
                   <Link
                     href={article.slug ? `/${locale}/article/${article.slug}` : '#'}
-                    className="hover:text-red-600 transition-colors"
+                    className="text-sm hover:text-red-600 transition-colors"
                   >
                     {article.title}
                   </Link>
                   <span className="text-gray-300">|</span>
-                </div>
+                </span>
               );
             })}
           </div>

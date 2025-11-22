@@ -1,57 +1,11 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+datasource db {
+  provider = "postgresql"
+}
 
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "postgresql"
-}
-
-// Permissions
-model Permission {
-  id          String   @id @default(uuid())
-  key         String   @unique // e.g., 'articles.create', 'users.delete'
-  name        String   // Display name
-  description String?
-  category    String   // e.g., 'articles', 'users', 'settings'
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  rolePermissions RolePermission[]
-
-  @@map("permissions")
-}
-
-// Roles
-model Role {
-  id          String   @id @default(uuid())
-  key         String   @unique // e.g., 'admin', 'editor'
-  name        String   // Display name
-  description String?
-  isSystem    Boolean  @default(false) @map("is_system") // System roles cannot be deleted
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  rolePermissions RolePermission[]
-
-  @@map("roles")
-}
-
-// Role-Permission junction table
-model RolePermission {
-  id           String     @id @default(uuid())
-  roleId       String     @map("role_id")
-  permissionId String     @map("permission_id")
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-
-  @@unique([roleId, permissionId])
-  @@map("role_permissions")
-}
-
-// User model for authentication
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -59,11 +13,56 @@ model User {
   name      String?
   role      String   @default("admin") // admin, editor, etc. (kept for backward compatibility)
   createdAt DateTime @default(now()) @map("created_at")
+    avatar    String?  @map("avatar")
+  bioAz    String?  @map("bio_az")
+  bioEn    String?  @map("bio_en")
   updatedAt DateTime @updatedAt @map("updated_at")
   articles  Article[]
 
   @@map("users")
 }
+// Roles and Permissions
+model Permission {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String?
+  category    String?
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  rolePermissions RolePermission[]
+  
+  @@map("permissions")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  key         String?  @unique
+  name        String?
+  description String?  @db.Text
+  isSystem    Boolean  @default(false) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  rolePermissions RolePermission[]
+  
+  @@map("roles")
+}
+
+model RolePermission {
+  id           String   @id @default(uuid())
+  roleId       String   @map("role_id")
+  permissionId String   @map("permission_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
 
 // Category translations
 model CategoryTranslation {
@@ -165,6 +164,7 @@ model Article {
   categoryId  String?   @map("category_id")
   authorId    String?   @map("author_id")
   featured    Boolean   @default(false)
+  agenda      Boolean   @default(false)
   status      String    @default("draft") // 'draft' or 'published'
   views       Int       @default(0)
   publishedAt DateTime? @map("published_at")

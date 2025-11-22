@@ -1,0 +1,326 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Permissions
+model Permission {
+  id          String   @id @default(uuid())
+  key         String   @unique // e.g., 'articles.create', 'users.delete'
+  name        String   // Display name
+  description String?
+  category    String   // e.g., 'articles', 'users', 'settings'
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+// Roles
+model Role {
+  id          String   @id @default(uuid())
+  key         String   @unique // e.g., 'admin', 'editor'
+  name        String   // Display name
+  description String?
+  isSystem    Boolean  @default(false) @map("is_system") // System roles cannot be deleted
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+// Role-Permission junction table
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String     @map("role_id")
+  permissionId String     @map("permission_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// User model for authentication
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("admin") // admin, editor, etc. (kept for backward compatibility)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  articles  Article[]
+
+  @@map("users")
+}
+
+// Category translations
+model CategoryTranslation {
+  id          String   @id @default(uuid())
+  categoryId  String   @map("category_id")
+  locale      String // 'az' or 'en'
+  name        String
+  description String?
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, locale])
+  @@map("category_translations")
+}
+
+// Categories
+model Category {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  imageUrl  String?  @map("image_url")
+  order     Int      @default(0)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  translations CategoryTranslation[]
+  articles     Article[]
+
+  @@map("categories")
+}
+
+// Menu translations
+model MenuTranslation {
+  id     String  @id @default(uuid())
+  menuId String  @map("menu_id")
+  locale String // 'az' or 'en'
+  title  String
+  url    String?
+  menu   Menu    @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@unique([menuId, locale])
+  @@map("menu_translations")
+}
+
+// Menus
+model Menu {
+  id            String   @id @default(uuid())
+  parentId      String?  @map("parent_id")
+  type          String   @default("custom") // 'category', 'page', 'custom'
+  targetId      String?  @map("target_id") // Category ID or Page ID (if type is category or page)
+  order         Int      @default(0)
+  isActive      Boolean  @default(true) @map("is_active")
+  showInHeader  Boolean  @default(true) @map("show_in_header")
+  showInFooter  Boolean  @default(false) @map("show_in_footer")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  parent       Menu?             @relation("MenuParent", fields: [parentId], references: [id], onDelete: Cascade)
+  children     Menu[]            @relation("MenuParent")
+  translations MenuTranslation[]
+
+  @@map("menus")
+}
+
+// Article translations
+model ArticleTranslation {
+  id        String  @id @default(uuid())
+  articleId String  @map("article_id")
+  locale    String // 'az' or 'en'
+  title     String
+  slug      String
+  excerpt   String?
+  content   String  @db.Text
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, locale])
+  @@unique([locale, slug])
+  @@map("article_translations")
+}
+
+// Article images (gallery)
+model ArticleImage {
+  id        String   @id @default(uuid())
+  articleId String   @map("article_id")
+  url       String
+  alt       String?
+  caption   String?  @db.Text
+  order     Int      @default(0)
+  isPrimary Boolean  @default(false) @map("is_primary")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@map("article_images")
+}
+
+// Articles
+model Article {
+  id          String    @id @default(uuid())
+  categoryId  String?   @map("category_id")
+  authorId    String?   @map("author_id")
+  featured    Boolean   @default(false)
+  status      String    @default("draft") // 'draft' or 'published'
+  views       Int       @default(0)
+  publishedAt DateTime? @map("published_at")
+  deletedAt   DateTime? @map("deleted_at") // Soft delete
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  category     Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  author       User?                @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  translations ArticleTranslation[]
+  images       ArticleImage[]
+  tags         ArticleTag[]
+
+  @@map("articles")
+}
+
+// Tag translations
+model TagTranslation {
+  id        String   @id @default(uuid())
+  tagId     String   @map("tag_id")
+  locale    String // 'az' or 'en'
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([tagId, locale])
+  @@map("tag_translations")
+}
+
+// Tags
+model Tag {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  translations TagTranslation[]
+  articles     ArticleTag[]
+
+  @@map("tags")
+}
+
+// Many-to-many relationship between Article and Tag
+model ArticleTag {
+  id        String   @id @default(uuid())
+  articleId String   @map("article_id")
+  tagId     String   @map("tag_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, tagId])
+  @@map("article_tags")
+}
+
+// Gallery Template translations
+model GalleryTemplateTranslation {
+  id                String          @id @default(uuid())
+  galleryTemplateId String          @map("gallery_template_id")
+  locale            String // 'az' or 'en'
+  name              String
+  description       String?
+  galleryTemplate   GalleryTemplate @relation(fields: [galleryTemplateId], references: [id], onDelete: Cascade)
+
+  @@unique([galleryTemplateId, locale])
+  @@map("gallery_template_translations")
+}
+
+// Gallery Template images
+model GalleryTemplateImage {
+  id                String   @id @default(uuid())
+  galleryTemplateId String   @map("gallery_template_id")
+  url               String
+  alt               String?
+  caption           String?  @db.Text
+  order             Int      @default(0)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  galleryTemplate GalleryTemplate @relation(fields: [galleryTemplateId], references: [id], onDelete: Cascade)
+
+  @@map("gallery_template_images")
+}
+
+// Gallery Templates
+model GalleryTemplate {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  type      String   @default("grid") // grid, masonry, carousel, slider
+  columns   Int      @default(3)
+  settings  Json? // Additional settings as JSON
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  translations GalleryTemplateTranslation[]
+  images       GalleryTemplateImage[]
+
+  @@map("gallery_templates")
+}
+
+// Advertisement translations
+model AdvertisementTranslation {
+  id              String        @id @default(uuid())
+  advertisementId String        @map("advertisement_id")
+  locale          String // 'az' or 'en'
+  title           String?
+  advertisement   Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
+
+  @@unique([advertisementId, locale])
+  @@map("advertisement_translations")
+}
+
+// Advertisements
+model Advertisement {
+  id        String   @id @default(uuid())
+  type      String   @default("image") // 'image' or 'html'
+  imageUrl  String?  @map("image_url")
+  htmlCode  String?  @map("html_code") @db.Text
+  linkUrl   String?  @map("link_url")
+  position  String // 'header', 'sidebar', 'footer', 'content-top', 'content-bottom', etc.
+  order     Int      @default(0)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  translations AdvertisementTranslation[]
+
+  @@map("advertisements")
+}
+
+// Page translations
+model PageTranslation {
+  id        String   @id @default(uuid())
+  pageId    String   @map("page_id")
+  locale    String   // 'az' or 'en'
+  title     String
+  slug      String
+  content   String   @db.Text
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, locale])
+  @@unique([locale, slug])
+  @@map("page_translations")
+}
+
+// Static Pages
+model Page {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  translations PageTranslation[]
+
+  @@map("pages")
+}

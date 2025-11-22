@@ -51,11 +51,16 @@ export default async function EditArticlePage({
     notFound();
   }
 
+  // Agenda property-sini təmin et (əgər yoxdursa)
+  const articleWithAgenda = {
+    ...article,
+    agenda: (article as any).agenda !== undefined ? (article as any).agenda : false,
+  };
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-8">Xəbər Redaktəsi</h1>
-      <ArticleForm article={article} categories={categories} users={users} />
+      <ArticleForm article={articleWithAgenda as any} categories={categories} users={users} />
     </div>
   );
 }
-

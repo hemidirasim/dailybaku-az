@@ -11,9 +11,10 @@ export async function GET(req: NextRequest) {
       where: {
         status: 'published',
         deletedAt: null,
-        publishedAt: {
-          lte: new Date(),
-        },
+        OR: [
+          { publishedAt: null },
+          { publishedAt: { lte: new Date() } }
+        ],
       },
       include: {
         translations: true,
@@ -23,25 +24,42 @@ export async function GET(req: NextRequest) {
           },
           take: 1,
         },
+        category: {
+          include: {
+            translations: {
+              where: { locale: locale }
+            }
+          }
+        }
       },
       orderBy: {
-        publishedAt: 'desc',
+        publishedAt: { sort: 'desc', nulls: 'last' }
       },
-      take: limit,
+      take: limit * 2, // Daha çox götür ki, title-i olmayanları filter etdikdən sonra kifayət qədər olsun
     });
 
-    const formattedArticles = articles.map((article: typeof articles[0]) => {
-      const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
-      
-      return {
-        id: article.id,
-        title: translation?.title || '',
-        slug: translation?.slug || '',
-        excerpt: translation?.excerpt || '',
-        image_url: article.images[0]?.url || null,
-        published_at: article.publishedAt,
-      };
-    });
+    const formattedArticles = articles
+      .map((article: typeof articles[0]) => {
+        const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
+        
+        // Əgər translation yoxdursa və ya title boşdursa, null qaytar
+        if (!translation || !translation.title || translation.title.trim() === '') {
+          return null;
+        }
+        
+        return {
+          id: article.id,
+          title: translation.title,
+          slug: translation.slug || '',
+          excerpt: translation.excerpt || '',
+          image_url: article.images[0]?.url || null,
+          published_at: article.publishedAt,
+          category: article.category?.translations[0]?.name || null,
+          category_slug: article.category?.slug || null,
+        };
+      })
+      .filter((article): article is NonNullable<typeof article> => article !== null)
+      .slice(0, limit); // Son limit qədər götür
 
     return NextResponse.json(formattedArticles);
   } catch (error: any) {
@@ -51,4 +69,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
