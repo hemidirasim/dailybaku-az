@@ -139,7 +139,7 @@ export default async function LocaleLayout({
         menus={headerMenus}
         locale={locale}
       />
-      <div className="hidden lg:block"><TopArticles /></div>
+      <TopArticles />
       {children}
       <Footer menus={footerMenus} locale={locale} />
     </>

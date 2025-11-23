@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 
 async function getAgendaArticles(offset: number = 0, locale: string = 'az') {
   try {
-    // Relative path istifadə edirik
     const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_BASE_URL || 'https://dailybaku.midiya.az');
     const response = await fetch(
       `${baseUrl}/api/articles/agenda?offset=${offset}&limit=4&locale=${locale}`,
@@ -19,7 +18,6 @@ async function getAgendaArticles(offset: number = 0, locale: string = 'az') {
     }
     
     const articles = await response.json();
-    console.log('Agenda articles fetched:', articles.length);
     return articles || [];
   } catch (error) {
     console.error('Error fetching agenda articles:', error);
@@ -31,22 +29,21 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
   const pathname = usePathname();
   const [articles, setArticles] = useState<any[]>([]);
   const [locale, setLocale] = useState('az');
-  const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const segments = pathname.split('/');
     const currentLocale = segments[1] === 'en' ? 'en' : 'az';
     setLocale(currentLocale);
-    setLoading(false);
 
     getAgendaArticles(offset, currentLocale).then((data) => {
       setArticles(data);
-      setLoading(false);
     });
   }, [pathname, offset]);
 
-  // Don't render if loading
-  if (false) {
+  // Don't render until mounted (client-side only)
+  if (!mounted) {
     return null;
   }
 
@@ -57,7 +54,6 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
 
   // Format articles for display (4 articles)
   const displayArticles = articles.slice(0, 4).map((article: any) => ({
-    // Real kateqoriya name-ini istifadə et (category field-indən)
     category: article.category || 'Xəbər',
     title: article.title || '',
     slug: article.slug || null,

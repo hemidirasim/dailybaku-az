@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { az, enUS } from 'date-fns/locale';
+import { az as azLocale, enUS } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 async function getFeaturedArticles(locale: string = 'az') {
@@ -141,7 +141,7 @@ export default function FeaturedWithNewsList() {
                               <div className="flex items-center gap-2 text-sm text-gray-300">
                                 <span>{formatDistanceToNow(new Date(article.published_at), { 
                                   addSuffix: true,
-                                  locale: locale === 'az' ? az : enUS
+                                  locale: locale === 'az' ? azLocale : enUS
                                 })}</span>
                               </div>
                             </div>
@@ -195,10 +195,7 @@ export default function FeaturedWithNewsList() {
                       </h3>
                       {displayRecent[0].published_at && (
                         <p className="text-sm text-gray-500">
-                          {new Date(displayRecent[0].published_at).toLocaleDateString(
-                            locale === 'az' ? 'az-AZ' : 'en-US',
-                            { day: 'numeric', month: 'long', year: 'numeric' }
-                          )}
+                          {displayRecent[0].published_at ? format(new Date(displayRecent[0].published_at), locale === 'az' ? 'd MMMM yyyy' : 'MMMM d, yyyy', { locale: locale === 'az' ? azLocale : enUS }) : ''}
                         </p>
                       )}
                     </Link>
@@ -227,10 +224,7 @@ export default function FeaturedWithNewsList() {
                           </h4>
                           {article.published_at && (
                             <p className="text-xs text-gray-500">
-                              {new Date(article.published_at).toLocaleDateString(
-                                locale === 'az' ? 'az-AZ' : 'en-US',
-                                { day: 'numeric', month: 'long', year: 'numeric' }
-                              )}
+                              {article.published_at ? format(new Date(article.published_at), locale === 'az' ? 'd MMMM yyyy' : 'MMMM d, yyyy', { locale: locale === 'az' ? azLocale : enUS }) : ''}
                             </p>
                           )}
                         </div>
@@ -253,7 +247,7 @@ export default function FeaturedWithNewsList() {
                   <ul className="space-y-4">
                     {displayRecent.map((article) => {
                       const date = new Date(article.published_at);
-                      const dateLocale = locale === 'az' ? az : enUS;
+                      const dateLocale = locale === 'az' ? azLocale : enUS;
                       const dateStr = format(date, 'd MMMM yyyy, HH:mm', { locale: dateLocale });
 
                       return (
