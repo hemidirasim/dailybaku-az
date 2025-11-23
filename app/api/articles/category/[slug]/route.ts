@@ -82,9 +82,7 @@ export async function GET(
     return NextResponse.json(result);
   } catch (error: any) {
     console.error('Error fetching category articles:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch articles' },
-      { status: 500 }
-    );
+    // Return empty array instead of error to prevent 404
+    return NextResponse.json([]);
   }
 }

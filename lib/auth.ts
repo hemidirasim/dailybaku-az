@@ -14,16 +14,22 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           if (!credentials?.email || !credentials?.password) {
+            console.error('Auth: Missing credentials');
             return null;
           }
+
+          console.log('Auth: Attempting login for:', credentials.email);
 
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
           });
 
           if (!user) {
+            console.error('Auth: User not found:', credentials.email);
             return null;
           }
+
+          console.log('Auth: User found, checking password');
 
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
@@ -31,8 +37,11 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isPasswordValid) {
+            console.error('Auth: Invalid password for:', credentials.email);
             return null;
           }
+
+          console.log('Auth: Login successful for:', credentials.email);
 
           return {
             id: user.id,
@@ -42,6 +51,10 @@ export const authOptions: NextAuthOptions = {
           };
         } catch (error) {
           console.error('Auth error:', error);
+          if (error instanceof Error) {
+            console.error('Auth error message:', error.message);
+            console.error('Auth error stack:', error.stack);
+          }
           return null;
         }
       },
@@ -69,7 +82,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  debug: process.env.NODE_ENV === 'development',
+  debug: true, // Enable debug in production to see errors
   secret: process.env.NEXTAUTH_SECRET,
 };
 

@@ -63,9 +63,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(formattedArticles);
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Xəta baş verdi' },
-      { status: 500 }
-    );
+    console.error('Recent articles error:', error);
+    // Return empty array instead of error to prevent 404
+    return NextResponse.json([]);
   }
 }

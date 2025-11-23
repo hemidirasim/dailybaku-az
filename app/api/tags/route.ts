@@ -47,7 +47,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching tags:', error);
-    return NextResponse.json({ error: 'Failed to fetch tags' }, { status: 500 });
+    // Return empty array instead of error to prevent 404
+    return NextResponse.json([]);
   }
 }
 

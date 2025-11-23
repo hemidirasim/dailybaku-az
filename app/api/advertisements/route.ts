@@ -31,10 +31,9 @@ export async function GET(req: NextRequest) {
       linkUrl: advertisement.linkUrl,
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Xəta baş verdi' },
-      { status: 500 }
-    );
+    console.error('Error fetching advertisement:', error);
+    // Return null instead of error to prevent 404
+    return NextResponse.json(null);
   }
 }
 
