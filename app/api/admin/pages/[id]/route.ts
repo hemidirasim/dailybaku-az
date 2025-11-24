@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 
 import { generateSlug } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

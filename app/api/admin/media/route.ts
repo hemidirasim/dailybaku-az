@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 // GET - Bütün media şəkillərini qaytar
 export async function GET(req: NextRequest) {
   try {

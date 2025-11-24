@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 
 import { generateSlug } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
