@@ -28,13 +28,6 @@ openssl rand -base64 32
 NEXT_PUBLIC_SITE_URL=https://your-domain.vercel.app
 ```
 
-## Supabase (Optional - əgər istifadə edirsinizsə)
-
-```
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
-
 ---
 
 ## Vercel-də Təyin Etmə Addımları
@@ -65,9 +58,6 @@ NEXTAUTH_URL=https://your-domain.vercel.app
 # Site URL (Vacib)
 NEXT_PUBLIC_SITE_URL=https://your-domain.vercel.app
 
-# Supabase (Optional)
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
 ---

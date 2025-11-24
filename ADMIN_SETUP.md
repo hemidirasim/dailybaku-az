@@ -19,9 +19,6 @@ DATABASE_URL="postgresql://user:password@localhost:5432/dailybaku?schema=public"
 NEXTAUTH_SECRET="your-secret-key-here-min-32-chars"
 NEXTAUTH_URL="http://localhost:3000"
 
-# Supabase (optional)
-NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
 ```
 
 `NEXTAUTH_SECRET` üçün təsadüfi bir string istifadə edin:

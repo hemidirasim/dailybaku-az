@@ -1,11 +1,11 @@
 # Xəbər Saytı - Quraşdırma Təlimatları
 
-Bu layihə Next.js və Supabase ilə hazırlanmış müasir bir xəbər portalıdır.
+Bu layihə Next.js və PostgreSQL (Prisma ORM) ilə hazırlanmış müasir bir xəbər portalıdır.
 
 ## Tələblər
 
 - Node.js 18+
-- Supabase hesabı
+- PostgreSQL verilənlər bazası
 
 ## Quraşdırma Addımları
 
@@ -15,13 +15,12 @@ Bu layihə Next.js və Supabase ilə hazırlanmış müasir bir xəbər portalı
 npm install
 ```
 
-### 2. Supabase Konfiqurasiyası
+### 2. Database Konfiqurasiyası
 
-Supabase layihə məlumatlarınızı əlavə edin. `.env.local` faylında:
+PostgreSQL verilənlər bazası connection string-ini əlavə edin. `.env.local` faylında:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://sizin-layihe.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sizin-anon-key
+DATABASE_URL=postgresql://username:password@host:5432/database?schema=public
 ```
 
 ### 3. Məlumat Bazası Strukturu
@@ -53,7 +52,7 @@ npm start
 - 📊 Görüntüləmə statistikası
 - 🌙 Tünd/İşıqlı mövzu dəstəyi
 - ⚡ Server-side rendering (SSR)
-- 🔐 Supabase ilə təhlükəsiz məlumat idarəetməsi
+- 🔐 Prisma ORM ilə təhlükəsiz məlumat idarəetməsi
 
 ## Struktur
 
@@ -70,7 +69,7 @@ components/
 └── Sidebar.tsx             # Yan panel
 
 lib/
-└── supabase.ts             # Supabase client
+└── prisma.ts               # Prisma client
 
 ```
 
@@ -78,9 +77,9 @@ lib/
 
 ### Yeni Xəbər Əlavə Etmək
 
-Supabase Dashboard-dan:
-1. `articles` cədvəlinə daxil olun
-2. "Insert row" düyməsini klikləyin
+Admin panelindən:
+1. `/dashboard` səhifəsinə daxil olun
+2. "Yeni Xəbər" düyməsini klikləyin
 3. Məlumatları doldurun və qeyd edin
 
 ### Kateqoriya Əlavə Etmək
@@ -92,7 +91,8 @@ Supabase Dashboard-dan:
 ## Texnologiyalar
 
 - **Next.js 13+** - React framework
-- **Supabase** - Backend və məlumat bazası
+- **PostgreSQL** - Verilənlər bazası
+- **Prisma** - ORM (Object-Relational Mapping)
 - **TypeScript** - Tip təhlükəsizliyi
 - **Tailwind CSS** - Styling
 - **shadcn/ui** - UI komponentləri

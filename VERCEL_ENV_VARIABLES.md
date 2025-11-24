@@ -27,11 +27,6 @@ postgresql://username:password@host:5432/database?schema=public
 postgresql://neondb_owner:your_password@ep-cool-darkness-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
 ```
 
-**Supabase üçün nümunə:**
-```
-postgresql://postgres:your_password@db.abcdefghijklmnop.supabase.co:5432/postgres?schema=public
-```
-
 **Vercel Postgres üçün nümunə:**
 ```
 postgres://default:your_password@ep-xxx-xxx.us-east-1.postgres.vercel-storage.com:5432/verceldb?sslmode=require
@@ -216,11 +211,6 @@ NEXT_PUBLIC_BASE_URL=https://dailybaku.az
 **Nümunə (Neon.tech):**
 ```env
 DATABASE_URL=postgresql://neondb_owner:AbC123XyZ@ep-cool-darkness-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
-```
-
-**Nümunə (Supabase):**
-```env
-DATABASE_URL=postgresql://postgres.abcdefghijklmnop:your_password@aws-0-us-east-1.pooler.supabase.com:6543/postgres?schema=public&sslmode=require
 ```
 
 ### Preview:
