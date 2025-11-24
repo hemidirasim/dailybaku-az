@@ -29,7 +29,10 @@ import dynamic from 'next/dynamic';
 
 // Quill editor-u dinamik import ilə yüklə (SSR problemi üçün)
 const ReactQuill = dynamic(
-  () => import('react-quill').then((mod) => ({ default: mod.default })),
+  async () => {
+    const ReactQuillComponent = (await import('react-quill')).default;
+    return ReactQuillComponent;
+  },
   { 
     ssr: false,
     loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded" />
