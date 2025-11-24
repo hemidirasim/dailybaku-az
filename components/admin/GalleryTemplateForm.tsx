@@ -62,8 +62,6 @@ interface GalleryTemplateFormProps {
   };
 }
 
-import { generateSlug } from '@/lib/utils';
-
 export default function GalleryTemplateForm({ template }: GalleryTemplateFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
