@@ -14,9 +14,30 @@ import { Badge } from '@/components/ui/badge';
 import DeleteButton from '@/components/admin/DeleteButton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+export const dynamic = 'force-dynamic';
+
 export default async function UsersPage() {
   let users: any[] = [];
   let roles: any[] = [];
+
+  // Build zamanı DATABASE_URL yoxdursa, boş array qaytar
+  if (!process.env.DATABASE_URL) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <p className="text-sm text-muted-foreground mb-1 uppercase tracking-widest">
+              İdarəetmə Mərkəzi
+            </p>
+            <h1 className="text-3xl font-bold">İstifadəçilər və Rollar</h1>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+          Database bağlantısı yoxdur. Zəhmət olmasa environment variable-ları yoxlayın.
+        </div>
+      </div>
+    );
+  }
 
   try {
     [users, roles] = await Promise.all([
