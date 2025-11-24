@@ -44,16 +44,6 @@ interface CategoryFormProps {
   };
 }
 
-// Slug oluşturma fonksiyonu
-const generateSlug = (text: string): string => {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '') // Özel karakterleri kaldır
-    .replace(/[\s_-]+/g, '-') // Boşlukları ve alt çizgileri tire ile değiştir
-    .replace(/^-+|-+$/g, ''); // Baştan ve sondan tireleri kaldır
-};
-
 export default function CategoryForm({ category }: CategoryFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);

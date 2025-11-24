@@ -193,3 +193,17 @@
 .animate-scroll:hover {
   animation-play-state: paused;
 }
+
+/* Search Input Slide-in Animation */
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+    width: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+    width: 12rem; /* w-48 */
+  }
+}

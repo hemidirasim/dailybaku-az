@@ -2,16 +2,7 @@ import 'dotenv/config';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { prisma } from '../lib/prisma';
-
-// Slug oluşturma fonksiyonu
-const generateSlug = (text: string): string => {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-};
+import { generateSlug } from '../lib/utils';
 
 interface NewsItem {
   title: string;

@@ -1,15 +1,6 @@
 import 'dotenv/config';
 import { prisma } from '../lib/prisma';
-
-// Slug oluşturma fonksiyonu
-const generateSlug = (text: string): string => {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-};
+import { generateSlug } from '../lib/utils';
 
 async function main() {
   console.log('Bölmələr və səhifələr əlavə edilir...');

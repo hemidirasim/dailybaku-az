@@ -24,7 +24,7 @@ import { X, Upload, Image as ImageIcon, Plus, Check, ChevronsUpDown, ArrowUp, Ar
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { cn } from '@/lib/utils';
+import { cn, generateSlug } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 
 // Quill editor-u dinamik import ilə yüklə (SSR problemi üçün)
@@ -122,16 +122,6 @@ interface ArticleFormProps {
   users?: ArticleUser[];
   defaultAuthorId?: string | null;
 }
-
-// Slug oluşturma fonksiyonu
-const generateSlug = (text: string): string => {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '') // Özel karakterleri kaldır
-    .replace(/[\s_-]+/g, '-') // Boşlukları ve alt çizgileri tire ile değiştir
-    .replace(/^-+|-+$/g, ''); // Baştan ve sondan tireleri kaldır
-};
 
 const fallbackSlug = (locale: string) => `${locale}-${Date.now()}`;
 

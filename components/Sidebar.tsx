@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { az, enUS } from 'date-fns/locale';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Advertisement } from '@/components/Advertisement';
 
 interface RecentArticle {
@@ -22,10 +22,16 @@ interface SidebarProps {
 
 export default function Sidebar({ recentArticles }: SidebarProps) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const locale = useMemo(() => {
     const segments = pathname.split('/');
     return segments[1] === 'en' ? 'en' : 'az';
   }, [pathname]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <aside className="space-y-8">
       <Advertisement position="sidebar" locale={locale} />
@@ -38,7 +44,7 @@ export default function Sidebar({ recentArticles }: SidebarProps) {
             <li key={article.id} className="flex items-start gap-2">
               <span className="text-red-600 text-lg mt-1">•</span>
               <div className="flex-1">
-                {article.published_at && (
+                {article.published_at && mounted && (
                   <p className="text-xs text-muted-foreground mb-1">
                     {format(new Date(article.published_at), 'dd MMMM yyyy, HH:mm', { 
                       locale: locale === 'az' ? az : enUS 

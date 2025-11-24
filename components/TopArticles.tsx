@@ -4,23 +4,23 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-async function getAgendaArticles(offset: number = 0, locale: string = 'az') {
+async function getTopArticles(offset: number = 0, locale: string = 'az') {
   try {
-    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_BASE_URL || 'https://dailybaku.midiya.az');
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3008');
     const response = await fetch(
-      `${baseUrl}/api/articles/agenda?offset=${offset}&limit=4&locale=${locale}`,
+      `${baseUrl}/api/articles/top?offset=${offset}&limit=4&locale=${locale}`,
       { cache: 'no-store' }
     );
     
     if (!response.ok) {
-      console.error('Agenda articles API error:', response.status, response.statusText);
+      console.error('Top articles API error:', response.status, response.statusText);
       return [];
     }
     
     const articles = await response.json();
     return articles || [];
   } catch (error) {
-    console.error('Error fetching agenda articles:', error);
+    console.error('Error fetching top articles:', error);
     return [];
   }
 }
@@ -30,15 +30,22 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
   const [articles, setArticles] = useState<any[]>([]);
   const [locale, setLocale] = useState('az');
   const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setMounted(true);
     const segments = pathname.split('/');
     const currentLocale = segments[1] === 'en' ? 'en' : 'az';
     setLocale(currentLocale);
+    setLoading(true);
 
-    getAgendaArticles(offset, currentLocale).then((data) => {
+    getTopArticles(offset, currentLocale).then((data) => {
+      console.log('TopArticles - Received data:', data);
       setArticles(data);
+      setLoading(false);
+    }).catch((error) => {
+      console.error('TopArticles - Error:', error);
+      setLoading(false);
     });
   }, [pathname, offset]);
 
@@ -47,14 +54,32 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
     return null;
   }
 
-  // Don't render if no articles
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="border-b border-gray-200 pb-4 md:pb-6">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-0">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="py-3 md:py-4 animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if no articles (after loading)
   if (articles.length === 0) {
     return null;
   }
 
   // Format articles for display (4 articles)
   const displayArticles = articles.slice(0, 4).map((article: any) => ({
-    category: article.category || 'Xəbər',
+    category: article.categories?.name || article.category || 'Xəbər',
     title: article.title || '',
     slug: article.slug || null,
   }));

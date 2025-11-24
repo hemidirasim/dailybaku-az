@@ -52,6 +52,11 @@ export default function FeaturedWithNewsList() {
   const [locale, setLocale] = useState('az');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const segments = pathname.split('/');
@@ -138,12 +143,14 @@ export default function FeaturedWithNewsList() {
                               {article.excerpt && (
                                 <p className="text-gray-200 mb-2">{article.excerpt}</p>
                               )}
-                              <div className="flex items-center gap-2 text-sm text-gray-300">
-                                <span>{formatDistanceToNow(new Date(article.published_at), { 
-                                  addSuffix: true,
-                                  locale: locale === 'az' ? azLocale : enUS
-                                })}</span>
-                              </div>
+                              {mounted && (
+                                <div className="flex items-center gap-2 text-sm text-gray-300">
+                                  <span>{article.published_at ? formatDistanceToNow(new Date(article.published_at), { 
+                                    addSuffix: true,
+                                    locale: locale === 'az' ? azLocale : enUS
+                                  }) : ''}</span>
+                                </div>
+                              )}
                             </div>
                           </Link>
                         </div>
@@ -193,9 +200,9 @@ export default function FeaturedWithNewsList() {
                       <h3 className="text-2xl font-bold mb-3 group-hover:text-red-600 transition-colors">
                         {displayRecent[0].title}
                       </h3>
-                      {displayRecent[0].published_at && (
+                      {displayRecent[0].published_at && mounted && (
                         <p className="text-sm text-gray-500">
-                          {displayRecent[0].published_at ? format(new Date(displayRecent[0].published_at), locale === 'az' ? 'd MMMM yyyy' : 'MMMM d, yyyy', { locale: locale === 'az' ? azLocale : enUS }) : ''}
+                          {format(new Date(displayRecent[0].published_at), locale === 'az' ? 'd MMMM yyyy' : 'MMMM d, yyyy', { locale: locale === 'az' ? azLocale : enUS })}
                         </p>
                       )}
                     </Link>
@@ -222,9 +229,9 @@ export default function FeaturedWithNewsList() {
                           <h4 className="text-sm font-bold mb-2 group-hover:text-red-600 transition-colors ">
                             {article.title}
                           </h4>
-                          {article.published_at && (
+                          {article.published_at && mounted && (
                             <p className="text-xs text-gray-500">
-                              {article.published_at ? format(new Date(article.published_at), locale === 'az' ? 'd MMMM yyyy' : 'MMMM d, yyyy', { locale: locale === 'az' ? azLocale : enUS }) : ''}
+                              {format(new Date(article.published_at), locale === 'az' ? 'd MMMM yyyy' : 'MMMM d, yyyy', { locale: locale === 'az' ? azLocale : enUS })}
                             </p>
                           )}
                         </div>
@@ -246,17 +253,19 @@ export default function FeaturedWithNewsList() {
                 <div className="max-h-[600px] overflow-y-auto pr-2">
                   <ul className="space-y-4">
                     {displayRecent.map((article) => {
-                      const date = new Date(article.published_at);
+                      const date = article.published_at ? new Date(article.published_at) : null;
                       const dateLocale = locale === 'az' ? azLocale : enUS;
-                      const dateStr = format(date, 'd MMMM yyyy, HH:mm', { locale: dateLocale });
+                      const dateStr = mounted && date ? format(date, 'd MMMM yyyy, HH:mm', { locale: dateLocale }) : '';
 
                       return (
                         <li key={article.id} className="flex items-start gap-2">
                           <span className="text-red-600 text-lg mt-1">•</span>
                           <div className="flex-1">
-                            <p className="text-xs text-muted-foreground mb-1">
-                              {dateStr}
-                            </p>
+                            {mounted && (
+                              <p className="text-xs text-muted-foreground mb-1">
+                                {dateStr}
+                              </p>
+                            )}
                             {article.slug ? (
                               <Link
                                 href={`/${locale}/article/${article.slug}`}

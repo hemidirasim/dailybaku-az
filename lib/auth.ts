@@ -3,6 +3,12 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
 
+// Validate required environment variables
+const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+if (!nextAuthSecret) {
+  throw new Error('NEXTAUTH_SECRET environment variable is required. Please set it in .env.local file.');
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -82,7 +88,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  debug: true, // Enable debug in production to see errors
-  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development', // Enable debug in development
+  secret: nextAuthSecret,
 };
 

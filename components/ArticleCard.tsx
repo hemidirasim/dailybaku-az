@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow, format } from 'date-fns';
 import { az, enUS } from 'date-fns/locale';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 
 interface ArticleCardProps {
@@ -27,20 +27,25 @@ export default function ArticleCard({
   featured = false,
 }: ArticleCardProps) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const locale = useMemo(() => {
     const segments = pathname.split('/');
     return segments[1] === 'en' ? 'en' : 'az';
   }, [pathname]);
   const dateLocale = locale === 'az' ? az : enUS;
   
-  const formattedDate = article.published_at
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  const formattedDate = mounted && article.published_at
     ? formatDistanceToNow(new Date(article.published_at), {
         addSuffix: true,
         locale: dateLocale,
       })
     : '';
   
-  const formattedTime = article.published_at
+  const formattedTime = mounted && article.published_at
     ? format(new Date(article.published_at), 'HH:mm', { locale: dateLocale })
     : '';
 
@@ -71,9 +76,11 @@ export default function ArticleCard({
           {article.excerpt && (
             <p className="text-gray-200 mb-2">{article.excerpt}</p>
           )}
-          <div className="flex items-center gap-2 text-sm text-gray-300">
-            <span>{formattedDate}</span>
-          </div>
+          {mounted && (
+            <div className="flex items-center gap-2 text-sm text-gray-300">
+              <span>{formattedDate}</span>
+            </div>
+          )}
         </div>
       </Link>
     );
@@ -103,7 +110,7 @@ export default function ArticleCard({
         <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors leading-tight">
           {article.title}
         </h3>
-        {article.published_at && (
+        {article.published_at && mounted && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="h-3 w-3" />
             <span>{formattedTime}</span>

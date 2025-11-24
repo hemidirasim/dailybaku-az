@@ -8,6 +8,11 @@ export default async function EditArticlePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  
+  // Əgər id 'az' və ya 'en' dirsə, 404 qaytar
+  if (id === 'az' || id === 'en') {
+    notFound();
+  }
   const [article, categories, users] = await Promise.all([
     prisma.article.findUnique({
       where: { id },

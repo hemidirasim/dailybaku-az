@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import { useState } from 'react';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -16,7 +17,9 @@ import {
   Megaphone,
   Users,
   File,
-  Shield
+  Shield,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -46,6 +49,7 @@ const menuItems: MenuItem[] = [
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { hasPermission, loading } = usePermissions();
+  const [articlesMenuOpen, setArticlesMenuOpen] = useState(false);
 
   // Filter menu items based on permissions
   const visibleMenuItems = menuItems.filter((item) => {
@@ -58,6 +62,12 @@ export default function AdminSidebar() {
     // Check if user has permission
     return hasPermission(item.permission);
   });
+
+  // Auto-open articles menu if on articles page
+  const isArticlesPage = pathname.startsWith('/admin/articles');
+  if (isArticlesPage && !articlesMenuOpen) {
+    setArticlesMenuOpen(true);
+  }
 
   return (
     <div className="w-64 bg-gray-900 text-white min-h-screen flex flex-col">
@@ -82,6 +92,64 @@ export default function AdminSidebar() {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           
+          // Xəbərlər üçün expandable menu
+          if (item.href === '/admin/articles') {
+            const isArticlesActive = pathname.startsWith('/admin/articles');
+            
+            return (
+              <div key={item.href} className="space-y-1">
+                <button
+                  onClick={() => setArticlesMenuOpen(!articlesMenuOpen)}
+                  className={cn(
+                    'w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors',
+                    isArticlesActive
+                      ? 'bg-gray-800 text-white'
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </div>
+                  {articlesMenuOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </button>
+                {articlesMenuOpen && (
+                  <div className="ml-4 space-y-1">
+                    <Link
+                      href="/admin/articles/az"
+                      className={cn(
+                        'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
+                        pathname === '/admin/articles/az'
+                          ? 'bg-gray-700 text-white'
+                          : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                      )}
+                    >
+                      <span>🇦🇿</span>
+                      <span>Azərbaycanca</span>
+                    </Link>
+                    <Link
+                      href="/admin/articles/en"
+                      className={cn(
+                        'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
+                        pathname === '/admin/articles/en'
+                          ? 'bg-gray-700 text-white'
+                          : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                      )}
+                    >
+                      <span>🇬🇧</span>
+                      <span>İngiliscə</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            );
+          }
+          
+          // Digər menu item-ları
           return (
             <Link
               key={item.href}

@@ -30,8 +30,13 @@ export default function GundemSection() {
   const [articles, setArticles] = useState<any[]>([]);
   const [locale, setLocale] = useState('az');
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   const dateLocale = useMemo(() => (locale === 'az' ? az : enUS), [locale]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const segments = pathname.split('/');
@@ -64,14 +69,14 @@ export default function GundemSection() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map((article) => {
-            const formattedDate = article.published_at
+            const formattedDate = mounted && article.published_at
               ? formatDistanceToNow(new Date(article.published_at), {
                   addSuffix: true,
                   locale: dateLocale,
                 })
               : '';
             
-            const formattedTime = article.published_at
+            const formattedTime = mounted && article.published_at
               ? new Date(article.published_at).toLocaleTimeString(locale === 'az' ? 'az-AZ' : 'en-US', {
                   hour: '2-digit',
                   minute: '2-digit',
@@ -106,12 +111,14 @@ export default function GundemSection() {
                       {article.excerpt}
                     </p>
                   )}
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span>{formattedTime}</span>
-                    <span className="mx-1">•</span>
-                    <span>{formattedDate}</span>
-                  </div>
+                  {mounted && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      <span>{formattedTime}</span>
+                      <span className="mx-1">•</span>
+                      <span>{formattedDate}</span>
+                    </div>
+                  )}
                 </Link>
               </div>
             );

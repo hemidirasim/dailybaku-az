@@ -14,11 +14,21 @@ export async function POST(
     }
 
     const { id } = await params;
+    
+    // Əgər id 'az' və ya 'en' dirsə, 404 qaytar
+    if (id === 'az' || id === 'en') {
+      return NextResponse.json({ error: 'Invalid ID' }, { status: 404 });
+    }
+    
     await prisma.article.delete({
       where: { id },
     });
 
-    return NextResponse.redirect(new URL('/admin/articles', req.url));
+    // Referer header-dan locale-i tap
+    const referer = req.headers.get('referer') || '';
+    const localeMatch = referer.match(/\/admin\/articles\/(az|en)/);
+    const locale = localeMatch ? localeMatch[1] : 'az';
+    return NextResponse.redirect(new URL(`/admin/articles/${locale}`, req.url));
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || 'Xəta baş verdi' },
