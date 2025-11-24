@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // XML escape funksiyası
 function escapeXml(unsafe: string): string {
   return unsafe
@@ -13,6 +15,26 @@ function escapeXml(unsafe: string): string {
 
 export async function GET() {
   try {
+    // Build zamanı DATABASE_URL yoxdursa, boş RSS qaytar
+    if (!process.env.DATABASE_URL) {
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az';
+      const rss = `<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title><![CDATA[Daily Baku]]></title>
+    <link>${baseUrl}</link>
+    <description><![CDATA[Azərbaycanda və dünyada baş verən son xəbərlər]]></description>
+    <language>az</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+  </channel>
+</rss>`;
+      return new NextResponse(rss, {
+        headers: {
+          'Content-Type': 'application/xml; charset=utf-8',
+        },
+      });
+    }
+
     // Published və silinməmiş xəbərləri götür
     const articles = await prisma.article.findMany({
       where: {

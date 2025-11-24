@@ -3,7 +3,7 @@
 ## Tələblər
 
 - Node.js 18+
-- PostgreSQL veritabanı (Supabase və ya lokal)
+- PostgreSQL veritabanı
 
 ## Quraşdırma Addımları
 
@@ -165,5 +165,5 @@ Default:
 - [ ] Settings səhifəsi
 - [ ] User management
 - [ ] Analytics dashboard
-- [ ] Supabase Storage inteqrasiyası (şəkil upload üçün)
+- [x] Şəkil upload funksiyası (API route ilə)
 
