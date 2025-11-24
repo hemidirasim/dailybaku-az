@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import ArticleCard from '@/components/ArticleCard';
 import Sidebar from '@/components/Sidebar';
+import type { Metadata } from 'next';
 
 async function getCategory(slug: string, locale: string) {
   const category = await prisma.category.findUnique({
@@ -100,6 +101,59 @@ async function getRecentArticles(locale: string) {
       published_at: article.publishedAt,
     };
   });
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string; locale: string }>;
+}): Promise<Metadata> {
+  const { slug, locale } = await params;
+  const category = await getCategory(slug, locale);
+
+  if (!category) {
+    return {
+      title: locale === 'az' ? 'Kateqoriya tapılmadı' : 'Category not found',
+      description: locale === 'az' ? 'Axtardığınız kateqoriya tapılmadı' : 'The category you are looking for was not found',
+    };
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az';
+  const categoryUrl = `${baseUrl}/${locale}/category/${category.slug}`;
+  const title = `${category.name} - Daily Baku`;
+  const description = locale === 'az' 
+    ? `${category.name} kateqoriyasındakı son xəbərlər və məqalələr`
+    : `Latest news and articles in ${category.name} category`;
+
+  return {
+    title,
+    description,
+    keywords: `${category.name}, ${locale === 'az' ? 'xəbər, Azərbaycan' : 'news, Azerbaijan'}`,
+    openGraph: {
+      title,
+      description,
+      url: categoryUrl,
+      siteName: 'Daily Baku',
+      locale: locale === 'az' ? 'az_AZ' : 'en_US',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+    },
+    alternates: {
+      canonical: categoryUrl,
+      languages: {
+        'az-AZ': `${baseUrl}/az/category/${category.slug}`,
+        'en-US': `${baseUrl}/en/category/${category.slug}`,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
 }
 
 export default async function CategoryPage({

@@ -3,12 +3,16 @@ import { notFound, redirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, User, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, User, Eye, Edit } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import TopArticles from '@/components/TopArticles';
 import ArticleGallery from '@/components/ArticleGallery';
 import { Advertisement } from '@/components/Advertisement';
 import ShareButtons from '@/components/ShareButtons';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import type { Metadata } from 'next';
 
 async function getArticle(slug: string, locale: string) {
   // Əvvəlcə bu slug ilə hər hansı bir translation-da article axtaraq
@@ -63,6 +67,7 @@ async function getArticle(slug: string, locale: string) {
 
   return {
     ...article,
+    id: article.id,
     redirect: false,
     title: translation.title || '',
     slug: translation.slug || '',
@@ -136,15 +141,97 @@ async function getRecentArticles(locale: string) {
     .slice(0, 5); // Son 5 qədər götür
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string; locale: string }>;
+}): Promise<Metadata> {
+  const { slug, locale } = await params;
+  const article = await getArticle(slug, locale);
+
+  if (!article || (article as any).redirect) {
+    return {
+      title: locale === 'az' ? 'Xəbər tapılmadı' : 'Article not found',
+      description: locale === 'az' ? 'Axtardığınız xəbər tapılmadı' : 'The article you are looking for was not found',
+    };
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az';
+  const articleUrl = `${baseUrl}/${locale}/article/${article.slug}`;
+  const imageUrl = article.image_url 
+    ? (article.image_url.startsWith('http') ? article.image_url : `${baseUrl}${article.image_url}`)
+    : `${baseUrl}/og-image.jpg`;
+
+  const title = `${article.title} - Daily Baku`;
+  const description = article.excerpt || (locale === 'az' 
+    ? 'Azərbaycanda və dünyada baş verən son xəbərlər' 
+    : 'Latest news from Azerbaijan and around the world');
+
+  return {
+    title,
+    description,
+    keywords: article.category?.name 
+      ? `${article.category.name}, ${locale === 'az' ? 'xəbər, Azərbaycan' : 'news, Azerbaijan'}`
+      : locale === 'az' ? 'xəbər, Azərbaycan' : 'news, Azerbaijan',
+    authors: article.author ? [{ name: article.author.name || 'Daily Baku' }] : undefined,
+    openGraph: {
+      title,
+      description,
+      url: articleUrl,
+      siteName: 'Daily Baku',
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: article.title,
+        },
+      ],
+      locale: locale === 'az' ? 'az_AZ' : 'en_US',
+      type: 'article',
+      publishedTime: article.published_at ? new Date(article.published_at).toISOString() : undefined,
+      modifiedTime: article.published_at ? new Date(article.published_at).toISOString() : undefined,
+      authors: article.author ? [article.author.name || 'Daily Baku'] : undefined,
+      section: article.category?.name,
+      tags: article.category ? [article.category.name] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+    },
+    alternates: {
+      canonical: articleUrl,
+      languages: {
+        'az-AZ': `${baseUrl}/az/article/${article.slug}`,
+        'en-US': `${baseUrl}/en/article/${article.slug}`,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+  };
+}
+
 export default async function ArticlePage({
   params,
 }: {
   params: Promise<{ slug: string; locale: string }>;
 }) {
   const { slug, locale } = await params;
-  const [article, recentArticles] = await Promise.all([
+  const [article, recentArticles, session] = await Promise.all([
     getArticle(slug, locale),
     getRecentArticles(locale),
+    getServerSession(authOptions),
   ]);
 
   // Əgər article tapılmadısa, 404
@@ -158,42 +245,101 @@ export default async function ArticlePage({
     redirect(`/${locale}`);
   }
 
+  // Admin session yoxla
+  const isAdmin = session?.user && (session.user as any).role === 'admin';
+  const articleId = article.id;
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az';
+  const articleUrl = `${baseUrl}/${locale}/article/${article.slug}`;
+  const imageUrl = article.image_url 
+    ? (article.image_url.startsWith('http') ? article.image_url : `${baseUrl}${article.image_url}`)
+    : `${baseUrl}/og-image.jpg`;
+
+  // JSON-LD Structured Data
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline: article.title,
+    description: article.excerpt || '',
+    image: imageUrl,
+    datePublished: article.published_at ? new Date(article.published_at).toISOString() : undefined,
+    dateModified: article.published_at ? new Date(article.published_at).toISOString() : undefined,
+    author: article.author ? {
+      '@type': 'Person',
+      name: article.author.name || 'Daily Baku',
+    } : {
+      '@type': 'Organization',
+      name: 'Daily Baku',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Daily Baku',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${baseUrl}/logo.png`,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': articleUrl,
+    },
+    articleSection: article.category?.name,
+    keywords: article.category?.name || '',
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <article className="lg:col-span-2">
-            <Advertisement position="article-top" locale={locale} />
-            {article.category && (
-              <Link href={`/${locale}/category/${article.category.slug}`}>
-                <Badge className="mb-4">{article.category.name}</Badge>
-              </Link>
-            )}
+            {/* Print Logo - Only visible when printing */}
+            <div className="hidden text-center print-logo">
+              <div
+                className="font-bold text-center dark:font-normal"
+                style={{ fontFamily: 'Chomsky, serif', fontSize: '2.5rem' }}
+              >
+                Daily Baku
+                {locale === 'en' && (
+                  <div className="text-sm font-normal" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                    International
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Advertisement position="article-top" locale={locale} className="no-print" />
+            <div className="flex items-center justify-between mb-4 no-print">
+              {article.category && (
+                <Link href={`/${locale}/category/${article.category.slug}`}>
+                  <Badge>{article.category.name}</Badge>
+                </Link>
+              )}
+              {isAdmin && articleId && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto"
+                >
+                  <Link href={`/dashboard/articles/edit/${articleId}`}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    {locale === 'az' ? 'Redaktə et' : 'Edit'}
+                  </Link>
+                </Button>
+              )}
+            </div>
 
             <h1 className="text-4xl font-bold mb-4 leading-tight">
               {article.title}
             </h1>
 
-            <div className="mb-6">
-              <ShareButtons 
-                title={article.title} 
-                url={`/${locale}/article/${article.slug}`}
-                locale={locale}
-              />
-            </div>
-
-            <div className="flex items-center gap-6 text-sm text-muted-foreground mb-6">
-              {article.author && (
-                <Link 
-                  href={`/${locale}/author/${article.author.id}`}
-                  className="flex items-center gap-2 hover:text-red-600 transition-colors"
-                >
-                  <User className="h-4 w-4" />
-                  <span>{article.author.name}</span>
-                </Link>
-              )}
+            <div className="flex items-center gap-6 text-sm text-muted-foreground mb-6 print-date">
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
+                <Calendar className="h-4 w-4 print:hidden" />
                 <span>
                   {article.published_at
                     ? new Date(article.published_at).toLocaleDateString(locale === 'az' ? 'az-AZ' : 'en-US', {
@@ -204,10 +350,16 @@ export default async function ArticlePage({
                     : ''}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <Eye className="h-4 w-4" />
-                <span>{article.views} views</span>
-              </div>
+              {article.published_at && (
+                <div className="flex items-center gap-2">
+                  <span>
+                    {new Date(article.published_at).toLocaleTimeString(locale === 'az' ? 'az-AZ' : 'en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+              )}
             </div>
 
             {article.image_url && (
@@ -223,7 +375,7 @@ export default async function ArticlePage({
             )}
 
             {article.excerpt && (
-              <p className="text-xl text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-xl text-muted-foreground mb-6 leading-relaxed no-print">
                 {article.excerpt}
               </p>
             )}
@@ -235,10 +387,10 @@ export default async function ArticlePage({
 
             {/* Şəkil Qalereyası - Content-dən sonra */}
             {article.images && article.images.length > 1 && (
-              <ArticleGallery images={article.images} title={article.title} />
+              <ArticleGallery images={article.images} title={article.title} className="no-print" />
             )}
 
-            <div className="mt-8 pt-6 border-t">
+            <div className="mt-8 pt-6 border-t no-print">
               <ShareButtons 
                 title={article.title} 
                 url={`/${locale}/article/${article.slug}`}
@@ -246,42 +398,7 @@ export default async function ArticlePage({
               />
             </div>
             
-            {/* Author Info Box */}
-            {article.author && (
-              <div className="mt-8 bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <Link 
-                  href={`/${locale}/author/${article.author.id}`}
-                  className="flex flex-col md:flex-row items-start md:items-center gap-4 hover:opacity-80 transition-opacity group"
-                >
-                  {article.author.avatar ? (
-                    <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-gray-300 flex-shrink-0">
-                      <Image
-                        src={article.author.avatar}
-                        alt={article.author.name}
-                        fill
-                        className="object-cover group-hover:scale-110 transition-transform"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center text-2xl font-bold text-gray-600 flex-shrink-0">
-                      {article.author.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-1 group-hover:text-red-600 transition-colors">
-                      {article.author.name}
-                    </h3>
-                    {article.author.bio && (
-                      <p className="text-sm text-gray-600 line-clamp-2">
-                        {article.author.bio}
-                      </p>
-                    )}
-                  </div>
-                </Link>
-              </div>
-            )}
-            
-            <Advertisement position="article-bottom" locale={locale} />
+            <Advertisement position="article-bottom" locale={locale} className="no-print" />
           </article>
 
           <div className="lg:col-span-1">

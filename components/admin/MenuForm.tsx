@@ -227,7 +227,7 @@ export default function MenuForm({ menu, parentMenus = [], categories = [], page
       }
 
       toast.success(menu ? 'Menu yeniləndi' : 'Menu yaradıldı');
-      router.push('/admin/menus');
+      router.push('/dashboard/menus');
       router.refresh();
     } catch (error) {
       toast.error('Xəta baş verdi');

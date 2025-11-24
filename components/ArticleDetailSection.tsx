@@ -1,37 +1,34 @@
 'use client';
 
-import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { az, enUS } from 'date-fns/locale';
+import { useEffect, useState } from 'react';
 
-const demoImages = [
-  'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/1591055/pexels-photo-1591055.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184460/pexels-photo-3184460.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184357/pexels-photo-3184357.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184306/pexels-photo-3184306.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184325/pexels-photo-3184325.jpeg?auto=compress&cs=tinysrgb&w=800',
-];
-
-async function getArticles() {
-  const { data: articles } = await supabase
-    .from('articles')
-    .select('*, categories(*)')
-    .order('published_at', { ascending: false })
-    .limit(10);
-
-  if (!articles) return [];
-  
-  return articles.map((article, index) => ({
-    ...article,
-    image_url: article.image_url || demoImages[index % demoImages.length],
-  }));
+async function getPoliticalArticles(locale: string = 'az') {
+  try {
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az');
+    const response = await fetch(
+      `${baseUrl}/api/articles/category/siyaset?locale=${locale}&limit=15`,
+      { cache: 'no-store' }
+    );
+    
+    if (!response.ok) return [];
+    
+    const articles = await response.json();
+    return articles.map((article: any) => ({
+      ...article,
+      image_url: article.image_url || article.image || article.imageUrl || null,
+      categories: article.category ? { name: article.category, slug: article.category_slug || 'siyaset' } : null,
+      published_at: article.published_at,
+      excerpt: article.excerpt || '',
+      author: article.author || '',
+      role: article.role || '',
+    }));
+  } catch (error) {
+    console.error('Error fetching political articles:', error);
+    return [];
+  }
 }
 
 export default function ArticleDetailSection() {
@@ -44,73 +41,19 @@ export default function ArticleDetailSection() {
     const currentLocale = segments[1] === 'en' ? 'en' : 'az';
     setLocale(currentLocale);
 
-    getArticles().then(setArticles);
+    getPoliticalArticles(currentLocale).then(setArticles);
   }, [pathname]);
 
-  const defaultArticles = [
-    {
-      id: 1,
-      title: 'This Nudged Jeepers Ded Sesulky Oite Ten Around Style3',
-      slug: null,
-      image_url: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800',
-      excerpt: 'This nudged jeepers less dogged sheared opposite then around but a due heinous square subtle amphibiously chameleon palpable tyrannical aboard removed much outside and without vicious scallop flapped newt as.',
-      content: 'With a large decorative initial capital letter, this is the body text that continues in a two-column layout. The text flows naturally and provides detailed information about the article topic.',
-      author: 'Maxin Dalton',
-      role: 'Editor',
-      published_at: '2016-06-01T00:00:00Z',
-      categories: { name: 'UNCATEGORIZED', slug: 'uncategorized' },
-    },
-    {
-      id: 2,
-      title: 'Timmediately Quail Was Inverse Much So Remade Dimly Salmon',
-      slug: null,
-      image_url: 'https://images.pexels.com/photos/1591055/pexels-photo-1591055.jpeg?auto=compress&cs=tinysrgb&w=800',
-      excerpt: 'Nesciunt mumblecore blog, wayfarers voluptate VHS vice before they sold out delectus direct trade. Wullamco dolore',
-      content: 'With a large decorative initial capital letter, this is the body text that continues in a two-column layout.',
-      author: 'Maxin Dalton',
-      role: 'Editor',
-      published_at: '2015-03-05T00:00:00Z',
-      categories: { name: 'CULTURE', slug: 'culture' },
-    },
-  ];
-
-  const defaultBottomArticles = [
-    {
-      id: 3,
-      title: 'Incongruous Jeepers Jellyfish One Far Well Known',
-      slug: null,
-      image_url: 'https://images.pexels.com/photos/3184460/pexels-photo-3184460.jpeg?auto=compress&cs=tinysrgb&w=800',
-      excerpt: 'Within spread beside the ouch sulky and this wonderfully and as the well and where supply much hyena so tolerantly recast hawk darn woodpecker.',
-      categories: { name: 'CULTURE', slug: 'culture' },
-    },
-    {
-      id: 4,
-      title: 'This Nudged Jeepers While Much The Less',
-      slug: null,
-      image_url: 'https://images.pexels.com/photos/3184357/pexels-photo-3184357.jpeg?auto=compress&cs=tinysrgb&w=800',
-      excerpt: 'Nudged jeepers less dogged sheared opposite then around but a due heinous square subtle amphibiously chameleon palpable tyrannical aboard removed much outside.',
-      categories: { name: 'SPORT', slug: 'sport' },
-    },
-  ];
-
-  const sidebarArticles = [
-    { category: 'Culture', title: 'Incongruous Jeepers Jellyfish One Far Well Known', excerpt: 'Short excerpt text here' },
-    { category: 'Politic , Sport', title: 'This Nudged Jeepers While Much The Less', excerpt: 'Short excerpt text here' },
-    { category: 'Uncategorized', title: 'This Nudged Jeepers Ded Sesulky Oite Ten Around Style3', excerpt: 'Short excerpt text here' },
-    { category: 'Culture , Europe', title: 'Timmediately Quail Was Inverse Much So Remade Dimly Salmon', excerpt: 'Short excerpt text here' },
-    { category: 'Europe , Finance', title: 'Unanimous Haltered Loud One Trod Trigly Style Four', excerpt: 'Short excerpt text here' },
-    { category: 'Technology', title: 'New Technology Breakthrough in Digital Innovation', excerpt: 'Latest developments in tech industry' },
-    { category: 'Health , Science', title: 'Medical Research Reveals Important Findings', excerpt: 'New discoveries in healthcare sector' },
-    { category: 'Business', title: 'Economic Growth Shows Positive Trends This Quarter', excerpt: 'Market analysis and financial updates' },
-    { category: 'Entertainment', title: 'Latest Film Festival Highlights Cultural Diversity', excerpt: 'Arts and entertainment news' },
-    { category: 'Sports', title: 'Championship Finals Set to Begin Next Week', excerpt: 'Sports updates and match results' },
-    { category: 'Politics', title: 'New Policy Changes Announced by Government', excerpt: 'Political developments and analysis' },
-    { category: 'Education', title: 'University Research Program Receives Major Funding', excerpt: 'Educational news and updates' },
-  ];
-
-  const mainArticle = articles[0] || defaultArticles[0];
-  const sideArticle1 = articles[1] || defaultArticles[1];
-  const sideArticle2 = articles[2] || defaultArticles[0];
+  const heroArticle = articles[0];
+  const secondaryArticles = articles.slice(1, 3);
+  const bottomArticles = secondaryArticles;
+  const sidebarArticles = articles.slice(3, 9).map((article: any) => ({
+    title: article.title || '',
+    slug: article.slug || null,
+  }));
+  const sideArticles = articles.slice(9, 11);
+  const sideArticle1 = sideArticles[0];
+  const sideArticle2 = sideArticles[1];
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -118,182 +61,207 @@ export default function ArticleDetailSection() {
     const month = date.toLocaleDateString(dateLocale, { month: 'short' });
     const day = date.getDate();
     const year = date.getFullYear();
-    return `${month} ${day}, ${year}`;
+    const time = date.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' });
+    return `${time} • ${month} ${day}, ${year}`;
   };
 
   return (
     <div className="border-b border-gray-200 pb-6">
       <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h2 className="text-sm font-bold text-foreground font-serif">
+            {locale === 'az' ? 'Siyasət' : 'Politics'}
+          </h2>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Sidebar */}
           <div className="lg:col-span-2 space-y-6">
-            {sidebarArticles.map((article, index) => (
-              <div key={index} className="border-b border-gray-200 pb-4 last:border-b-0">
-                <h3 className="text-sm font-bold text-black leading-tight">
-                  {article.title}
-                </h3>
+            {sidebarArticles.length > 0 ? (
+              sidebarArticles.map((article, index) => (
+                <div key={article.slug || index} className="border-b border-gray-200 pb-4 last:border-b-0">
+                  {article.slug ? (
+                    <Link href={`/${locale}/article/${article.slug}`}>
+                      <h3 className="text-sm font-bold text-foreground leading-tight hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                        {article.title}
+                      </h3>
+                    </Link>
+                  ) : (
+                    <h3 className="text-sm font-bold text-foreground leading-tight">
+                      {article.title}
+                    </h3>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                {locale === 'az' ? 'Siyasi xəbərlər yüklənir...' : 'Loading political news...'}
               </div>
-            ))}
+            )}
           </div>
 
           {/* Main Article - Center */}
           <div className="lg:col-span-7">
-            <div className="relative mb-6">
-              <Image
-                src={mainArticle.image_url || 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                alt={mainArticle.title}
-                width={800}
-                height={400}
-                className="w-full h-auto object-cover"
-              />
-              <div className="absolute top-4 left-4">
-                <div className="bg-red-600 text-white px-3 py-2 text-xs font-bold uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                  {mainArticle.categories?.name || 'UNCATEGORIZED'}
+            {heroArticle ? (
+              <>
+                <div className="relative mb-6">
+                  <Image
+                    src={heroArticle.image_url || '/placeholder-news.jpg'}
+                    alt={heroArticle.title}
+                    width={800}
+                    height={400}
+                    className="w-full h-auto object-cover"
+                  />
                 </div>
-              </div>
-            </div>
 
-            {mainArticle.slug ? (
-              <Link href={`/${locale}/article/${mainArticle.slug}`}>
-                <h1 className="text-3xl font-bold text-black mb-4 leading-tight hover:text-red-600 transition-colors cursor-pointer">
-                  {mainArticle.title}
-                </h1>
-              </Link>
-            ) : (
-              <h1 className="text-3xl font-bold text-black mb-4 leading-tight">
-                {mainArticle.title}
-              </h1>
-            )}
+                {heroArticle.slug ? (
+                  <Link href={`/${locale}/article/${heroArticle.slug}`}>
+                    <h1 className="text-3xl font-bold text-foreground mb-4 leading-tight hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
+                      {heroArticle.title}
+                    </h1>
+                  </Link>
+                ) : (
+                  <h1 className="text-3xl font-bold text-foreground mb-4 leading-tight">
+                    {heroArticle.title}
+                  </h1>
+                )}
 
-            <p className="text-gray-700 mb-4 leading-relaxed">
-              {mainArticle.excerpt}
-            </p>
+                {heroArticle.excerpt && (
+                  <p className="text-muted-foreground mb-4 leading-relaxed">
+                    {heroArticle.excerpt}
+                  </p>
+                )}
 
-            {/* Two Articles Below Main Article */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-              {(articles.length >= 5 ? articles.slice(3, 5) : defaultBottomArticles).map((article, index) => {
-                return (
-                  <div key={index}>
-                    <div className="relative mb-4">
-                      <Image
-                        src={article.image_url || 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                        alt={article.title}
-                        width={400}
-                        height={250}
-                        className="w-full h-auto object-cover"
-                      />
-                      <div className="absolute top-4 left-4">
-                        <div className="bg-red-600 text-white px-3 py-2 text-xs font-bold uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                          {article.categories?.name || 'UNCATEGORIZED'}
+                {/* Two Articles Below Main Article */}
+                {bottomArticles.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    {bottomArticles.map((article: any, index: number) => {
+                      return (
+                        <div key={article.id || index}>
+                          <div className="relative mb-4">
+                            <Image
+                              src={article.image_url || '/placeholder-news.jpg'}
+                              alt={article.title}
+                              width={400}
+                              height={250}
+                              className="w-full h-auto object-cover"
+                            />
+                          </div>
+                          {article.slug ? (
+                            <Link href={`/${locale}/article/${article.slug}`}>
+                              <h2 className="text-xl font-bold text-foreground mb-2 leading-tight hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
+                                {article.title}
+                              </h2>
+                            </Link>
+                          ) : (
+                            <h2 className="text-xl font-bold text-foreground mb-2 leading-tight">
+                              {article.title}
+                            </h2>
+                          )}
+                          {article.excerpt && (
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                              {article.excerpt}
+                            </p>
+                          )}
                         </div>
-                      </div>
-                    </div>
-                    {article.slug ? (
-                      <Link href={`/${locale}/article/${article.slug}`}>
-                        <h2 className="text-xl font-bold text-black mb-2 leading-tight hover:text-red-600 transition-colors cursor-pointer">
-                          {article.title}
-                        </h2>
-                      </Link>
-                    ) : (
-                      <h2 className="text-xl font-bold text-black mb-2 leading-tight">
-                        {article.title}
-                      </h2>
-                    )}
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {article.excerpt}
-                    </p>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-
+                )}
+              </>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <p>{locale === 'az' ? 'Siyasi xəbərlər yüklənir...' : 'Loading political news...'}</p>
+              </div>
+            )}
           </div>
 
           {/* Side Articles - Right */}
           <div className="lg:col-span-3 space-y-8">
             {/* First Side Article */}
-            <div>
-              <div className="relative mb-4">
-                <Image
-                  src={sideArticle1.image_url || 'https://images.pexels.com/photos/1591055/pexels-photo-1591055.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                  alt={sideArticle1.title}
-                  width={300}
-                  height={200}
-                  className="w-full h-auto object-cover"
-                />
-                <div className="absolute top-4 left-4">
-                  <div className="bg-red-600 text-white px-3 py-2 text-xs font-bold uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                    {sideArticle1.categories?.name || 'CULTURE'}
-                  </div>
+            {sideArticle1 && (
+              <div>
+                <div className="relative mb-4">
+                  <Image
+                    src={sideArticle1.image_url || '/placeholder-news.jpg'}
+                    alt={sideArticle1.title}
+                    width={300}
+                    height={200}
+                    className="w-full h-auto object-cover"
+                  />
                 </div>
-              </div>
 
-              <p className="text-xs text-gray-600 mb-2">
-                This nudged jeepers less dogged
-              </p>
-
-              {sideArticle1.slug ? (
-                <Link href={`/${locale}/article/${sideArticle1.slug}`}>
-                  <h2 className="text-lg font-bold text-black mb-3 leading-tight hover:text-red-600 transition-colors cursor-pointer">
+                {sideArticle1.slug ? (
+                  <Link href={`/${locale}/article/${sideArticle1.slug}`}>
+                    <h2 className="text-lg font-bold text-foreground mb-3 leading-tight hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
+                      {sideArticle1.title}
+                    </h2>
+                  </Link>
+                ) : (
+                  <h2 className="text-lg font-bold text-foreground mb-3 leading-tight">
                     {sideArticle1.title}
                   </h2>
-                </Link>
-              ) : (
-                <h2 className="text-lg font-bold text-black mb-3 leading-tight">
-                  {sideArticle1.title}
-                </h2>
-              )}
+                )}
 
-              <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-                {sideArticle1.excerpt}
-              </p>
+                {sideArticle1.excerpt && (
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                    {sideArticle1.excerpt}
+                  </p>
+                )}
 
-              <p className="text-xs text-gray-600 mb-4">
-                By {sideArticle1.author} / {sideArticle1.role} on {formatDate(sideArticle1.published_at)}
-              </p>
-            </div>
+                {sideArticle1.published_at && (
+                  <p className="text-xs text-muted-foreground mb-4">
+                    {sideArticle1.author && sideArticle1.role ? (
+                      <>By {sideArticle1.author} / {sideArticle1.role} on {formatDate(sideArticle1.published_at)}</>
+                    ) : (
+                      formatDate(sideArticle1.published_at)
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Second Side Article */}
-            <div>
-              <div className="relative mb-4">
-                <Image
-                  src={sideArticle2.image_url || 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                  alt={sideArticle2.title}
-                  width={300}
-                  height={200}
-                  className="w-full h-auto object-cover"
-                />
-                <div className="absolute top-4 left-4">
-                  <div className="bg-red-600 text-white px-3 py-2 text-xs font-bold uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                    {sideArticle2.categories?.name || 'CULTURE'}
-                  </div>
+            {sideArticle2 && (
+              <div>
+                <div className="relative mb-4">
+                  <Image
+                    src={sideArticle2.image_url || '/placeholder-news.jpg'}
+                    alt={sideArticle2.title}
+                    width={300}
+                    height={200}
+                    className="w-full h-auto object-cover"
+                  />
                 </div>
-              </div>
 
-              <p className="text-xs text-gray-600 mb-2">
-                This nudged jeepers less dogged
-              </p>
-
-              {sideArticle2.slug ? (
-                <Link href={`/${locale}/article/${sideArticle2.slug}`}>
-                  <h2 className="text-lg font-bold text-black mb-3 leading-tight hover:text-red-600 transition-colors cursor-pointer">
+                {sideArticle2.slug ? (
+                  <Link href={`/${locale}/article/${sideArticle2.slug}`}>
+                    <h2 className="text-lg font-bold text-foreground mb-3 leading-tight hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
+                      {sideArticle2.title}
+                    </h2>
+                  </Link>
+                ) : (
+                  <h2 className="text-lg font-bold text-foreground mb-3 leading-tight">
                     {sideArticle2.title}
                   </h2>
-                </Link>
-              ) : (
-                <h2 className="text-lg font-bold text-black mb-3 leading-tight">
-                  {sideArticle2.title}
-                </h2>
-              )}
+                )}
 
-              <p className="text-sm text-gray-700 mb-4 leading-relaxed">
-                {sideArticle2.excerpt}
-              </p>
+                {sideArticle2.excerpt && (
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                    {sideArticle2.excerpt}
+                  </p>
+                )}
 
-              <p className="text-xs text-gray-600 mb-4">
-                By {sideArticle2.author} / {sideArticle2.role} on {formatDate(sideArticle2.published_at)}
-              </p>
-            </div>
+                {sideArticle2.published_at && (
+                  <p className="text-xs text-muted-foreground mb-4">
+                    {sideArticle2.author && sideArticle2.role ? (
+                      <>By {sideArticle2.author} / {sideArticle2.role} on {formatDate(sideArticle2.published_at)}</>
+                    ) : (
+                      formatDate(sideArticle2.published_at)
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

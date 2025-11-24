@@ -13,9 +13,9 @@ datasource db {
 model Permission {
   id          String   @id @default(uuid())
   key         String   @unique // e.g., 'articles.create', 'users.delete'
-  name        String   // Display name
+  name        String // Display name
   description String?
-  category    String   // e.g., 'articles', 'users', 'settings'
+  category    String // e.g., 'articles', 'users', 'settings'
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -28,7 +28,7 @@ model Permission {
 model Role {
   id          String   @id @default(uuid())
   key         String   @unique // e.g., 'admin', 'editor'
-  name        String   // Display name
+  name        String // Display name
   description String?
   isSystem    Boolean  @default(false) @map("is_system") // System roles cannot be deleted
   createdAt   DateTime @default(now()) @map("created_at")
@@ -53,14 +53,15 @@ model RolePermission {
 
 // User model for authentication
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String?
-  role      String   @default("admin") // admin, editor, etc. (kept for backward compatibility)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  articles  Article[]
+  id              String    @id @default(uuid())
+  email           String    @unique
+  password        String
+  name            String?
+  role            String    @default("admin") // admin, editor, etc. (kept for backward compatibility)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  articles        Article[] @relation("ArticleAuthor")
+  deletedArticles Article[] @relation("ArticleDeletedBy")
 
   @@map("users")
 }
@@ -109,16 +110,16 @@ model MenuTranslation {
 
 // Menus
 model Menu {
-  id            String   @id @default(uuid())
-  parentId      String?  @map("parent_id")
-  type          String   @default("custom") // 'category', 'page', 'custom'
-  targetId      String?  @map("target_id") // Category ID or Page ID (if type is category or page)
-  order         Int      @default(0)
-  isActive      Boolean  @default(true) @map("is_active")
-  showInHeader  Boolean  @default(true) @map("show_in_header")
-  showInFooter  Boolean  @default(false) @map("show_in_footer")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(uuid())
+  parentId     String?  @map("parent_id")
+  type         String   @default("custom") // 'category', 'page', 'custom'
+  targetId     String?  @map("target_id") // Category ID or Page ID (if type is category or page)
+  order        Int      @default(0)
+  isActive     Boolean  @default(true) @map("is_active")
+  showInHeader Boolean  @default(true) @map("show_in_header")
+  showInFooter Boolean  @default(false) @map("show_in_footer")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   parent       Menu?             @relation("MenuParent", fields: [parentId], references: [id], onDelete: Cascade)
   children     Menu[]            @relation("MenuParent")
@@ -165,15 +166,18 @@ model Article {
   categoryId  String?   @map("category_id")
   authorId    String?   @map("author_id")
   featured    Boolean   @default(false)
+  agenda      Boolean   @default(false)
   status      String    @default("draft") // 'draft' or 'published'
   views       Int       @default(0)
   publishedAt DateTime? @map("published_at")
   deletedAt   DateTime? @map("deleted_at") // Soft delete
+  deletedById String?   @map("deleted_by_id") // Kim silib
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   category     Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  author       User?                @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  author       User?                @relation("ArticleAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  deletedBy    User?                @relation("ArticleDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
   translations ArticleTranslation[]
   images       ArticleImage[]
   tags         ArticleTag[]
@@ -299,13 +303,13 @@ model Advertisement {
 
 // Page translations
 model PageTranslation {
-  id        String   @id @default(uuid())
-  pageId    String   @map("page_id")
-  locale    String   // 'az' or 'en'
-  title     String
-  slug      String
-  content   String   @db.Text
-  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  id      String @id @default(uuid())
+  pageId  String @map("page_id")
+  locale  String // 'az' or 'en'
+  title   String
+  slug    String
+  content String @db.Text
+  page    Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@unique([pageId, locale])
   @@unique([locale, slug])

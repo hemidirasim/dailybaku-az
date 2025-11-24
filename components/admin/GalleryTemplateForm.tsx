@@ -175,7 +175,7 @@ export default function GalleryTemplateForm({ template }: GalleryTemplateFormPro
       }
 
       toast.success(template ? 'Şablon yeniləndi' : 'Şablon yaradıldı');
-      router.push('/admin/media');
+      router.push('/dashboard/media');
       router.refresh();
     } catch (error) {
       toast.error('Xəta baş verdi');

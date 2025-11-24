@@ -82,6 +82,9 @@ export async function PUT(
           })) || [],
         },
       },
+      include: {
+        translations: true,
+      },
     });
 
     return NextResponse.json(article);
@@ -104,11 +107,14 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    // Soft delete - yalnız deletedAt tarixini təyin et
+    const userId = (session.user as any).id;
+    
+    // Soft delete - deletedAt tarixini və deletedById-ni təyin et
     await prisma.article.update({
       where: { id },
       data: {
         deletedAt: new Date(),
+        deletedById: userId,
       },
     });
 

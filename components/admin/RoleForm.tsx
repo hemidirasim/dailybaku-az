@@ -159,7 +159,7 @@ export default function RoleForm({ role, permissions = [] }: RoleFormProps) {
       }
 
       toast.success(role ? 'Rol yeniləndi' : 'Rol yaradıldı');
-      router.push('/admin/roles');
+      router.push('/dashboard/roles');
       router.refresh();
     } catch (error: any) {
       toast.error(error.message || 'Xəta baş verdi');

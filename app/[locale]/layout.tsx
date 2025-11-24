@@ -3,6 +3,7 @@ import Header from '@/components/Header';
 import HeaderNews from '@/components/HeaderNews';
 import TopArticles from '@/components/TopArticles';
 import Footer from '@/components/Footer';
+import ReplaceICharacter from '@/components/ReplaceICharacter';
 import { prisma } from '@/lib/prisma';
 
 const locales = ['az', 'en'];
@@ -142,6 +143,7 @@ export default async function LocaleLayout({
       <TopArticles />
       {children}
       <Footer menus={footerMenus} locale={locale} />
+      {locale === 'en' && <ReplaceICharacter />}
     </>
   );
 }

@@ -98,7 +98,7 @@ export default function PermissionForm({ permission }: PermissionFormProps) {
       }
 
       toast.success(permission ? 'İcazə yeniləndi' : 'İcazə yaradıldı');
-      router.push('/admin/permissions');
+      router.push('/dashboard/permissions');
       router.refresh();
     } catch (error: any) {
       toast.error(error.message || 'Xəta baş verdi');

@@ -12,7 +12,7 @@ import { Clock } from 'lucide-react';
 async function getGundemArticles(locale: string = 'az') {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/articles/category/gndm?locale=${locale}&limit=6`,
+      `${process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az'}/api/articles/category/gndm?locale=${locale}&limit=6`,
       { cache: 'no-store' }
     );
     
@@ -50,10 +50,10 @@ export default function GundemSection() {
   }, [pathname]);
 
   return (
-    <div className="border-b border-gray-200 pb-6">
+    <div className="border-b border-border pb-6">
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-6">
-          <h2 className="text-3xl font-bold text-red-600 mb-2">
+          <h2 className="text-[17px] font-bold text-foreground mb-2">
             {locale === 'az' ? 'Gündəm' : 'Agenda'}
           </h2>
         </div>

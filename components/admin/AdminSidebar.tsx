@@ -33,17 +33,17 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, permission: 'dashboard.view' },
-  { href: '/admin/articles', label: 'Xəbərlər', icon: FileText, permission: 'articles.view' },
-  { href: '/admin/categories', label: 'Bölmələr', icon: Folder, permission: 'categories.view' },
-  { href: '/admin/tags', label: 'Taglar', icon: Tag, permission: 'tags.view' },
-  { href: '/admin/menus', label: 'Menular', icon: MenuIcon, permission: 'menus.view' },
-  { href: '/admin/pages', label: 'Statik Səhifələr', icon: File, permission: 'pages.view' },
-  { href: '/admin/advertisements', label: 'Reklamlar', icon: Megaphone, permission: 'advertisements.view' },
-  { href: '/admin/users', label: 'İstifadəçilər', icon: Users, permission: 'users.view' },
-  { href: '/admin/roles', label: 'Rollar', icon: Shield, permission: 'roles.view' },
-  { href: '/admin/media', label: 'Media', icon: ImageIcon, permission: 'media.view' },
-  { href: '/admin/settings', label: 'Parametrlər', icon: Settings, permission: 'settings.view' },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: 'dashboard.view' },
+  { href: '/dashboard/articles', label: 'Xəbərlər', icon: FileText, permission: 'articles.view' },
+  { href: '/dashboard/categories', label: 'Bölmələr', icon: Folder, permission: 'categories.view' },
+  { href: '/dashboard/tags', label: 'Taglar', icon: Tag, permission: 'tags.view' },
+  { href: '/dashboard/menus', label: 'Menular', icon: MenuIcon, permission: 'menus.view' },
+  { href: '/dashboard/pages', label: 'Statik Səhifələr', icon: File, permission: 'pages.view' },
+  { href: '/dashboard/advertisements', label: 'Reklamlar', icon: Megaphone, permission: 'advertisements.view' },
+  { href: '/dashboard/users', label: 'İstifadəçilər', icon: Users, permission: 'users.view' },
+  { href: '/dashboard/roles', label: 'Rollar', icon: Shield, permission: 'roles.view' },
+  { href: '/dashboard/media', label: 'Media', icon: ImageIcon, permission: 'media.view' },
+  { href: '/dashboard/settings', label: 'Parametrlər', icon: Settings, permission: 'settings.view' },
 ];
 
 export default function AdminSidebar() {
@@ -64,7 +64,7 @@ export default function AdminSidebar() {
   });
 
   // Auto-open articles menu if on articles page
-  const isArticlesPage = pathname.startsWith('/admin/articles');
+  const isArticlesPage = pathname.startsWith('/dashboard/articles');
   if (isArticlesPage && !articlesMenuOpen) {
     setArticlesMenuOpen(true);
   }
@@ -93,8 +93,8 @@ export default function AdminSidebar() {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           
           // Xəbərlər üçün expandable menu
-          if (item.href === '/admin/articles') {
-            const isArticlesActive = pathname.startsWith('/admin/articles');
+          if (item.href === '/dashboard/articles') {
+            const isArticlesActive = pathname.startsWith('/dashboard/articles');
             
             return (
               <div key={item.href} className="space-y-1">
@@ -120,10 +120,10 @@ export default function AdminSidebar() {
                 {articlesMenuOpen && (
                   <div className="ml-4 space-y-1">
                     <Link
-                      href="/admin/articles/az"
+                      href="/dashboard/articles/az"
                       className={cn(
                         'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
-                        pathname === '/admin/articles/az'
+                        pathname === '/dashboard/articles/az'
                           ? 'bg-gray-700 text-white'
                           : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                       )}
@@ -132,10 +132,10 @@ export default function AdminSidebar() {
                       <span>Azərbaycanca</span>
                     </Link>
                     <Link
-                      href="/admin/articles/en"
+                      href="/dashboard/articles/en"
                       className={cn(
                         'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
-                        pathname === '/admin/articles/en'
+                        pathname === '/dashboard/articles/en'
                           ? 'bg-gray-700 text-white'
                           : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                       )}
@@ -172,7 +172,7 @@ export default function AdminSidebar() {
         <Button
           variant="ghost"
           className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
-          onClick={() => signOut({ callbackUrl: '/admin/login' })}
+          onClick={() => signOut({ callbackUrl: '/dashboard/login' })}
         >
           <LogOut className="h-5 w-5 mr-3" />
           Çıxış

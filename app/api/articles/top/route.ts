@@ -6,8 +6,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const locale = searchParams.get('locale') || 'az';
 
-    // Müəyyən kateqoriyalar: Siyasət, Biznes, Texnologiya, Avto
-    const categorySlugs = ['siyaset', 'biznes', 'texnologiya', 'avto'];
+    // Müəyyən kateqoriyalar: Siyasət, Biznes, Texno, Avto
+    const categorySlugs = ['siyaset', 'biznes', 'texno', 'avto'];
 
     // Hər kateqoriya üçün ən çox oxunan 1 xəbəri götür
     const articlesPromises = categorySlugs.map(async (slug) => {

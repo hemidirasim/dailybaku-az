@@ -98,7 +98,7 @@ export default function TagForm({ tag }: TagFormProps) {
       }
 
       toast.success(tag ? 'Tag yeniləndi' : 'Tag yaradıldı');
-      router.push('/admin/tags');
+      router.push('/dashboard/tags');
       router.refresh();
     } catch (error) {
       toast.error('Xəta baş verdi');

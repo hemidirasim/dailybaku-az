@@ -63,7 +63,7 @@ const translations = {
 
 async function getPages(locale: string): Promise<Page[]> {
   try {
-    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_BASE_URL || 'https://dailybaku.midiya.az');
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_BASE_URL || 'https://dailybaku.az');
     const response = await fetch(
       `${baseUrl}/api/pages?locale=${locale}`,
       { cache: 'no-store' }
@@ -78,7 +78,7 @@ async function getPages(locale: string): Promise<Page[]> {
 
 async function getHotNews(locale: string): Promise<HotNews[]> {
   try {
-    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_BASE_URL || 'https://dailybaku.midiya.az');
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_BASE_URL || 'https://dailybaku.az');
     const response = await fetch(
       `${baseUrl}/api/articles/recent?locale=${locale}&limit=3`,
       { cache: 'no-store' }
@@ -99,7 +99,7 @@ async function getHotNews(locale: string): Promise<HotNews[]> {
 
 async function getTags(locale: string): Promise<string[]> {
   try {
-    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_BASE_URL || 'https://dailybaku.midiya.az');
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_BASE_URL || 'https://dailybaku.az');
     const response = await fetch(
       `${baseUrl}/api/tags?locale=${locale}&limit=15`,
       { cache: 'no-store' }
@@ -146,13 +146,18 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
       <div className="border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* About Us */}
+            {/* Logo */}
             <div>
-              <h3 className="text-lg font-bold mb-4">{t.aboutUs}</h3>
+              <h3 className="text-lg font-bold mb-4">Daily Baku</h3>
               <p className="text-sm text-gray-300 mb-4 leading-relaxed">
                 {t.aboutUsText}
               </p>
-              <div className="flex flex-col gap-2 mt-4">
+            </div>
+
+            {/* About Us */}
+            <div>
+              <h3 className="text-lg font-bold mb-4">{t.aboutUs}</h3>
+              <div className="flex flex-col gap-2">
                 {aboutUsPage && (
                   <Link
                     href={`/${locale}/page/${aboutUsPage.slug}`}
@@ -169,134 +174,33 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
                     {t.contactLink}
                   </Link>
                 )}
-                {termsPage && (
-                  <Link
-                    href={`/${locale}/page/${termsPage.slug}`}
-                    className="text-sm text-gray-300 hover:text-white transition-colors"
-                  >
-                    {t.termsLink}
-                  </Link>
-                )}
               </div>
             </div>
 
-            {/* Tag Cloud */}
+            {/* Contact */}
             <div>
-              <h3 className="text-lg font-bold mb-4">{t.tags}</h3>
-              <div className="flex flex-wrap gap-2">
-                {tags.length > 0 ? (
-                  tags.map((tag, index) => (
-                    <button
-                      key={index}
-                      className="px-3 py-1.5 border border-white text-white text-xs hover:bg-white hover:text-black transition-colors"
-                    >
-                      {tag}
-                    </button>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-400">{t.noTags}</p>
-                )}
-              </div>
+              <h3 className="text-lg font-bold mb-4">{t.contact}</h3>
+              {contactPage && (
+                <Link
+                  href={`/${locale}/page/${contactPage.slug}`}
+                  className="text-sm text-gray-300 hover:text-white transition-colors block mb-2"
+                >
+                  {t.contactLink}
+                </Link>
+              )}
             </div>
 
-            {/* Hot News */}
+            {/* Privacy Policy */}
             <div>
-              <h3 className="text-lg font-bold mb-4">{t.hotNews}</h3>
-              <div className="space-y-4">
-                {hotNews.length > 0 ? (
-                  hotNews.map((news, index) => (
-                    <div
-                      key={news.id}
-                      className={`${
-                        index < hotNews.length - 1 ? 'border-b border-white/20 pb-4' : ''
-                      }`}
-                    >
-                      <p className="text-xs text-gray-400 mb-2">
-                        {t.author} {news.author}
-                      </p>
-                      <Link
-                        href={`/${locale}/article/${news.slug}`}
-                        className="text-sm hover:text-red-600 transition-colors block"
-                      >
-                        {news.title}
-                      </Link>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-400">{t.noNews}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Quick Links / Footer Menu */}
-            <div>
-              <h3 className="text-lg font-bold mb-4">{t.quickLinks}</h3>
-              <ul className="space-y-2">
-                {menus.length > 0 ? (
-                  menus.map((menu) => (
-                    <li key={menu.id}>
-                      <Link
-                        href={menu.url}
-                        className="text-sm text-gray-300 hover:text-white transition-colors flex items-center gap-2"
-                      >
-                        <span>»</span>
-                        {menu.title}
-                      </Link>
-                      {menu.children && menu.children.length > 0 && (
-                        <ul className="ml-4 mt-2 space-y-1">
-                          {menu.children.map((child) => (
-                            <li key={child.id}>
-                              <Link
-                                href={child.url}
-                                className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-                              >
-                                <span>•</span>
-                                {child.title}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  ))
-                ) : (
-                  <>
-                    {aboutUsPage && (
-                      <li>
-                        <Link
-                          href={`/${locale}/page/${aboutUsPage.slug}`}
-                          className="text-sm text-gray-300 hover:text-white transition-colors flex items-center gap-2"
-                        >
-                          <span>»</span>
-                          {aboutUsPage.title}
-                        </Link>
-                      </li>
-                    )}
-                    {contactPage && (
-                      <li>
-                        <Link
-                          href={`/${locale}/page/${contactPage.slug}`}
-                          className="text-sm text-gray-300 hover:text-white transition-colors flex items-center gap-2"
-                        >
-                          <span>»</span>
-                          {contactPage.title}
-                        </Link>
-                      </li>
-                    )}
-                    {termsPage && (
-                      <li>
-                        <Link
-                          href={`/${locale}/page/${termsPage.slug}`}
-                          className="text-sm text-gray-300 hover:text-white transition-colors flex items-center gap-2"
-                        >
-                          <span>»</span>
-                          {termsPage.title}
-                        </Link>
-                      </li>
-                    )}
-                  </>
-                )}
-              </ul>
+              <h3 className="text-lg font-bold mb-4">{locale === 'az' ? 'Məxfilik Siyasəti' : 'Privacy Policy'}</h3>
+              {termsPage && (
+                <Link
+                  href={`/${locale}/page/${termsPage.slug}`}
+                  className="text-sm text-gray-300 hover:text-white transition-colors block"
+                >
+                  {t.termsLink}
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -311,6 +215,17 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-300">
               © {new Date().getFullYear()} - Daily Baku. {t.allRightsReserved}
+            </span>
+            <span className="text-sm text-gray-300">
+              {locale === 'az' ? 'Hazırladı' : 'Created by'}{' '}
+              <a 
+                href="https://midiya.az" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors underline"
+              >
+                Midiya.az
+              </a>
             </span>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

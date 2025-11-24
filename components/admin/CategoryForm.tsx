@@ -111,7 +111,7 @@ export default function CategoryForm({ category }: CategoryFormProps) {
       }
 
       toast.success(category ? 'Bölmə yeniləndi' : 'Bölmə yaradıldı');
-      router.push('/admin/categories');
+      router.push('/dashboard/categories');
       router.refresh();
     } catch (error) {
       toast.error('Xəta baş verdi');

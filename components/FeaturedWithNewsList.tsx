@@ -6,12 +6,14 @@ import { useEffect, useState } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { az as azLocale, enUS } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Sidebar from '@/components/Sidebar';
+import BusinessNewsSection from '@/components/BusinessNewsSection';
 
-async function getFeaturedArticles(locale: string = 'az') {
+async function getFeaturedArticles(locale: string = 'az', limit: number = 20) {
   try {
-    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3063');
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az');
     const response = await fetch(
-      `${baseUrl}/api/articles/featured?locale=${locale}&limit=5`,
+      `${baseUrl}/api/articles/featured?locale=${locale}&limit=${limit}`,
       { cache: 'no-store' }
     );
     
@@ -28,11 +30,11 @@ async function getFeaturedArticles(locale: string = 'az') {
   }
 }
 
-async function getRecentArticles(locale: string = 'az') {
+async function getRecentArticles(locale: string = 'az', limit: number = 10) {
   try {
-    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3063');
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az');
     const response = await fetch(
-      `${baseUrl}/api/articles/recent?locale=${locale}&limit=20`,
+      `${baseUrl}/api/articles/recent?locale=${locale}&limit=${limit}&offset=0`,
       { cache: 'no-store' }
     );
     
@@ -45,10 +47,36 @@ async function getRecentArticles(locale: string = 'az') {
   }
 }
 
+async function getAgendaArticles(locale: string = 'az', limit: number = 6) {
+  try {
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az');
+    // Gündəm kateqoriyasından xəbərləri gətir
+    const response = await fetch(
+      `${baseUrl}/api/articles/category/gundem?locale=${locale}&limit=${limit}`,
+      { cache: 'no-store' }
+    );
+    
+    if (!response.ok) return [];
+    
+    const articles = await response.json();
+    return articles.map((article: any) => ({
+      ...article,
+      image_url: article.image_url || article.image || article.imageUrl || null,
+      published_at: article.published_at,
+      excerpt: article.excerpt || '',
+    }));
+  } catch (error) {
+    console.error('Error fetching agenda articles:', error);
+    return [];
+  }
+}
+
+
 export default function FeaturedWithNewsList() {
   const pathname = usePathname();
   const [featuredArticles, setFeaturedArticles] = useState<any[]>([]);
   const [recentArticles, setRecentArticles] = useState<any[]>([]);
+  const [agendaArticles, setAgendaArticles] = useState<any[]>([]);
   const [locale, setLocale] = useState('az');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -64,8 +92,9 @@ export default function FeaturedWithNewsList() {
     setLocale(currentLocale);
     setLoading(true);
 
+    // Bütün featured xəbərləri gətir (manşet üçün 5, grid üçün qalan)
     Promise.all([
-      getFeaturedArticles(currentLocale).then((articles) => {
+      getFeaturedArticles(currentLocale, 20).then((articles) => {
         console.log('FeaturedWithNewsList - Featured articles loaded:', articles.length);
         setFeaturedArticles(articles);
         return articles;
@@ -74,14 +103,21 @@ export default function FeaturedWithNewsList() {
         console.log('FeaturedWithNewsList - Recent articles loaded:', articles.length);
         setRecentArticles(articles);
         return articles;
+      }),
+      getAgendaArticles(currentLocale, 6).then((articles) => {
+        console.log('FeaturedWithNewsList - Agenda articles loaded:', articles.length);
+        setAgendaArticles(articles);
+        return articles;
       })
     ]).finally(() => {
       setLoading(false);
     });
   }, [pathname]);
 
-  const displayFeatured = featuredArticles;
-  const displayRecent = recentArticles;
+  // Manşetdə ilk 5 featured xəbər
+  const displayFeatured = featuredArticles.slice(0, 5);
+  // Grid-də gündəm xəbərləri
+  const recentGridArticles = agendaArticles.slice(0, 6); // İlk 6 gündəm xəbəri
 
   // Auto-play slider
   useEffect(() => {
@@ -98,17 +134,17 @@ export default function FeaturedWithNewsList() {
   // Always render component
   if (loading) {
     return (
-      <div className="border-b border-gray-200 pb-6 bg-white min-h-[500px]" data-testid="featured-with-news-list">
-        <div className="max-w-7xl mx-auto px-4 py-12 text-center text-gray-500">
-          <p>Xəbərlər yüklənir...</p>
+      <div className="border-b border-border pb-6 bg-background min-h-[500px]" data-testid="featured-with-news-list">
+        <div className="max-w-7xl mx-auto px-4 py-12 text-center text-muted-foreground">
+          <p>{locale === 'az' ? 'Xəbərlər yüklənir...' : 'Loading news...'}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="border-b border-gray-200 pb-6 bg-white" data-testid="featured-with-news-list">
-      <div className="max-w-7xl mx-auto px-4">
+    <div className="border-b border-border pb-6 bg-background" data-testid="featured-with-news-list">
+      <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Sol tərəf - 2 div: Manşet və Yeni Blok */}
           <div className="lg:col-span-2 space-y-6">
@@ -131,11 +167,6 @@ export default function FeaturedWithNewsList() {
                               style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                            <div className="absolute top-4 left-4">
-                              <div className="bg-red-600 text-white px-3 py-2 text-xs font-bold uppercase" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                                {article.category || 'SPORT'}
-                              </div>
-                            </div>
                             <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                               <h2 className="text-3xl font-bold mb-2 group-hover:text-red-600 transition-colors">
                                 {article.title}
@@ -143,12 +174,18 @@ export default function FeaturedWithNewsList() {
                               {article.excerpt && (
                                 <p className="text-gray-200 mb-2">{article.excerpt}</p>
                               )}
-                              {mounted && (
+                              {mounted && article.published_at && (
                                 <div className="flex items-center gap-2 text-sm text-gray-300">
-                                  <span>{article.published_at ? formatDistanceToNow(new Date(article.published_at), { 
-                                    addSuffix: true,
-                                    locale: locale === 'az' ? azLocale : enUS
-                                  }) : ''}</span>
+                                  <span>
+                                    {format(new Date(article.published_at), 'HH:mm', { locale: locale === 'az' ? azLocale : enUS })}
+                                  </span>
+                                  <span className="mx-1">•</span>
+                                  <span>
+                                    {formatDistanceToNow(new Date(article.published_at), { 
+                                      addSuffix: true,
+                                      locale: locale === 'az' ? azLocale : enUS
+                                    })}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -174,120 +211,62 @@ export default function FeaturedWithNewsList() {
                   </button>
                 </>
               ) : (
-                <div className="text-center py-12 text-muted-foreground bg-gray-50 rounded-lg">
+                <div className="text-center py-12 text-muted-foreground bg-muted rounded-lg">
                   <p>{locale === 'az' ? 'Featured xəbərlər yoxdur' : 'No featured articles'}</p>
                 </div>
               )}
             </div>
 
-            {/* Div 2: Yeni Blok - Solda 1 böyük xəbər, Sağda 4 kiçik xəbər */}
-            {displayRecent.length > 0 && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Sol tərəf - 1 böyük xəbər */}
-                <div className="lg:col-span-2">
-                  {displayRecent[0] && (
-                    <Link
-                      href={`/${locale}/article/${displayRecent[0].slug}`}
-                      className="block group"
-                    >
-                      <div className="relative w-full h-[400px] mb-4 rounded-lg overflow-hidden">
-                        <img
-                          src={displayRecent[0].image || displayRecent[0].imageUrl || displayRecent[0].image_url || "/demo/news1.jpg"}
-                          alt={displayRecent[0].title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <h3 className="text-2xl font-bold mb-3 group-hover:text-red-600 transition-colors">
-                        {displayRecent[0].title}
+            {/* Div 2: 6 bərabər blok */}
+            {recentGridArticles.length > 0 && (
+              <div className="space-y-6">
+                <div className="mb-6">
+                  <h2 className="text-sm font-bold text-foreground font-serif">
+                    {locale === 'az' ? 'Gündəm' : 'Agenda'}
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recentGridArticles.map((article, index) => (
+                  <Link
+                    key={article.id || index}
+                    href={`/${locale}/article/${article.slug}`}
+                    className="group block bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                  >
+                    <div className="relative w-full h-48">
+                      <img
+                        src={article.image || article.imageUrl || article.image_url || '/demo/news1.jpg'}
+                        alt={article.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="p-4 space-y-2">
+                      <h3 className="text-lg font-bold leading-tight group-hover:text-red-600 transition-colors">
+                        {article.title}
                       </h3>
-                      {displayRecent[0].published_at && mounted && (
-                        <p className="text-sm text-gray-500">
-                          {format(new Date(displayRecent[0].published_at), locale === 'az' ? 'd MMMM yyyy' : 'MMMM d, yyyy', { locale: locale === 'az' ? azLocale : enUS })}
+                      {article.excerpt && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {article.excerpt}
                         </p>
                       )}
-                    </Link>
-                  )}
-                </div>
-
-                {/* Sağ tərəf - 4 kiçik xəbər */}
-                <div className="lg:col-span-1">
-                  <div className="space-y-4">
-                    {displayRecent.slice(1, 5).map((article, index) => (
-                      <Link
-                        key={article.id || index}
-                        href={`/${locale}/article/${article.slug}`}
-                        className="flex gap-3 group"
-                      >
-                        <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
-                          <img
-                            src={article.image || article.imageUrl || article.image_url || "/demo/news1.jpg"}
-                            alt={article.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-bold mb-2 group-hover:text-red-600 transition-colors ">
-                            {article.title}
-                          </h4>
-                          {article.published_at && mounted && (
-                            <p className="text-xs text-gray-500">
-                              {format(new Date(article.published_at), locale === 'az' ? 'd MMMM yyyy' : 'MMMM d, yyyy', { locale: locale === 'az' ? azLocale : enUS })}
-                            </p>
-                          )}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
+                      {article.published_at && mounted && (
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(article.published_at), 'HH:mm', { locale: locale === 'az' ? azLocale : enUS })}
+                          <span className="mx-1">•</span>
+                          {format(new Date(article.published_at), locale === 'az' ? 'd MMMM yyyy' : 'MMMM d, yyyy', { locale: locale === 'az' ? azLocale : enUS })}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Sağ tərəf - 1 div: Xəbər lenti */}
+          {/* Sağ tərəf - 1 div: Xəbər lenti və Biznes xəbərləri */}
           <div className="lg:col-span-1">
-            <div className="border rounded-lg p-6 bg-white sticky top-4">
-              <h3 className="text-lg font-bold mb-4">
-                <span className="text-red-600">Xəbər lenti</span>
-              </h3>
-              {displayRecent.length > 0 ? (
-                <div className="max-h-[600px] overflow-y-auto pr-2">
-                  <ul className="space-y-4">
-                    {displayRecent.map((article) => {
-                      const date = article.published_at ? new Date(article.published_at) : null;
-                      const dateLocale = locale === 'az' ? azLocale : enUS;
-                      const dateStr = mounted && date ? format(date, 'd MMMM yyyy, HH:mm', { locale: dateLocale }) : '';
-
-                      return (
-                        <li key={article.id} className="flex items-start gap-2">
-                          <span className="text-red-600 text-lg mt-1">•</span>
-                          <div className="flex-1">
-                            {mounted && (
-                              <p className="text-xs text-muted-foreground mb-1">
-                                {dateStr}
-                              </p>
-                            )}
-                            {article.slug ? (
-                              <Link
-                                href={`/${locale}/article/${article.slug}`}
-                                className="text-sm font-medium hover:text-red-600 transition-colors block"
-                              >
-                                {article.title}
-                              </Link>
-                            ) : (
-                              <p className="text-sm font-medium">{article.title}</p>
-                            )}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground text-sm">
-                  <p>{locale === 'az' ? 'Xəbər yoxdur' : 'No news'}</p>
-                </div>
-              )}
-            </div>
+            <Sidebar recentArticles={recentArticles} />
+            <BusinessNewsSection />
           </div>
         </div>
       </div>

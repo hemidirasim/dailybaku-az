@@ -14,9 +14,10 @@ interface ArticleGalleryProps {
     isPrimary?: boolean;
   }>;
   title: string;
+  className?: string;
 }
 
-export default function ArticleGallery({ images, title }: ArticleGalleryProps) {
+export default function ArticleGallery({ images, title, className = '' }: ArticleGalleryProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   
   // Primary image is already shown in article, so filter it out
@@ -74,7 +75,7 @@ export default function ArticleGallery({ images, title }: ArticleGalleryProps) {
   return (
     <>
       {/* Thumbnail Gallery - Shown after content */}
-      <div className="mt-8 border-t pt-8">
+      <div className={`mt-8 border-t pt-8 ${className}`}>
         <h3 className="text-xl font-bold mb-4 text-gray-900">Şəkil Qalereyası</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {galleryImages.map((image, index) => (

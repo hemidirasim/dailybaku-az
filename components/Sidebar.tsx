@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { az, enUS } from 'date-fns/locale';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { Advertisement } from '@/components/Advertisement';
 
 interface RecentArticle {
@@ -20,9 +20,33 @@ interface SidebarProps {
   recentArticles: RecentArticle[];
 }
 
-export default function Sidebar({ recentArticles }: SidebarProps) {
+async function getMoreArticles(locale: string, offset: number = 0, limit: number = 10) {
+  try {
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az');
+    const response = await fetch(
+      `${baseUrl}/api/articles/recent?locale=${locale}&limit=${limit}&offset=${offset}`,
+      { cache: 'no-store' }
+    );
+    
+    if (!response.ok) return [];
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching more articles:', error);
+    return [];
+  }
+}
+
+export default function Sidebar({ recentArticles: initialArticles }: SidebarProps) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const [articles, setArticles] = useState<RecentArticle[]>(initialArticles);
+  const [offset, setOffset] = useState(initialArticles.length);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const sentinelRef = useRef<HTMLLIElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   const locale = useMemo(() => {
     const segments = pathname.split('/');
     return segments[1] === 'en' ? 'en' : 'az';
@@ -30,37 +54,105 @@ export default function Sidebar({ recentArticles }: SidebarProps) {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // İlk xəbərləri set et
+    setArticles(initialArticles);
+    setOffset(initialArticles.length);
+  }, [pathname]);
+
+  // Daha çox xəbər yüklə
+  const loadMoreArticles = useCallback(async () => {
+    if (loading || !hasMore) return;
+    
+    setLoading(true);
+    try {
+      const newArticles = await getMoreArticles(locale, offset, 10);
+      
+      if (newArticles.length === 0) {
+        setHasMore(false);
+      } else {
+        setArticles(prev => {
+          // Duplicate olmaması üçün yoxla
+          const existingIds = new Set(prev.map(a => a.id));
+          const uniqueNewArticles = newArticles.filter((a: RecentArticle) => !existingIds.has(a.id));
+          return [...prev, ...uniqueNewArticles];
+        });
+        setOffset(prev => prev + newArticles.length);
+      }
+    } catch (error) {
+      console.error('Error loading more articles:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [locale, offset, loading, hasMore]);
+
+  // IntersectionObserver ilə scroll-u izlə
+  useEffect(() => {
+    if (!sentinelRef.current || !hasMore || loading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          loadMoreArticles();
+        }
+      },
+      {
+        root: scrollContainerRef.current,
+        rootMargin: '100px',
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(sentinelRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, loading, loadMoreArticles]);
 
   return (
     <aside className="space-y-8">
       <Advertisement position="sidebar" locale={locale} />
-      <div className="border rounded-lg p-6">
+      <div className="border border-border rounded-lg p-6 bg-card">
         <h3 className="text-lg font-bold mb-4">
-          <span className="text-red-600">Xəbər lenti</span>
+          <span className="text-red-600 dark:text-red-400">{locale === 'az' ? 'Xəbər lenti' : 'News Feed'}</span>
         </h3>
-        <ul className="space-y-4">
-          {recentArticles.map((article) => (
-            <li key={article.id} className="flex items-start gap-2">
-              <span className="text-red-600 text-lg mt-1">•</span>
-              <div className="flex-1">
-                {article.published_at && mounted && (
-                  <p className="text-xs text-muted-foreground mb-1">
-                    {format(new Date(article.published_at), 'dd MMMM yyyy, HH:mm', { 
-                      locale: locale === 'az' ? az : enUS 
-                    })}
-                  </p>
+        <div 
+          ref={scrollContainerRef}
+          className="max-h-[600px] overflow-y-auto pr-2"
+        >
+          <ul className="space-y-4">
+            {articles.map((article, index) => (
+              <li key={article.id} className="flex items-start gap-2">
+                <span className="text-red-600 dark:text-red-400 text-lg mt-1">•</span>
+                <div className="flex-1">
+                  {article.published_at && mounted && (
+                    <p className="text-xs text-muted-foreground mb-1">
+                      {format(new Date(article.published_at), 'dd MMMM yyyy, HH:mm', { 
+                        locale: locale === 'az' ? az : enUS 
+                      })}
+                    </p>
+                  )}
+                  <Link
+                    href={`/${locale}/article/${article.slug}`}
+                    className="text-sm font-medium hover:text-red-600 dark:hover:text-red-400 transition-colors block"
+                  >
+                    {article.title}
+                  </Link>
+                </div>
+              </li>
+            ))}
+            {/* Sentinel element for infinite scroll */}
+            {hasMore && (
+              <li ref={sentinelRef} className="flex items-center justify-center py-4">
+                {loading && (
+                  <span className="text-xs text-muted-foreground">
+                    {locale === 'az' ? 'Yüklənir...' : 'Loading...'}
+                  </span>
                 )}
-                <Link
-                  href={`/${locale}/article/${article.slug}`}
-                  className="text-sm font-medium hover:text-primary transition-colors"
-                >
-                  {article.title}
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            )}
+          </ul>
+        </div>
       </div>
     </aside>
   );

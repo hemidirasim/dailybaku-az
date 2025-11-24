@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 async function getTopArticles(offset: number = 0, locale: string = 'az') {
   try {
-    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3008');
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az');
     const response = await fetch(
       `${baseUrl}/api/articles/top?offset=${offset}&limit=4&locale=${locale}`,
       { cache: 'no-store' }
@@ -57,13 +57,13 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
   // Show loading state
   if (loading) {
     return (
-      <div className="border-b border-gray-200 pb-4 md:pb-6">
+      <div className="border-b border-border pb-4 md:pb-6">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-0">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="py-3 md:py-4 animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-muted rounded w-20 mb-2"></div>
+                <div className="h-4 bg-muted rounded w-full"></div>
               </div>
             ))}
           </div>
@@ -79,13 +79,13 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
 
   // Format articles for display (4 articles)
   const displayArticles = articles.slice(0, 4).map((article: any) => ({
-    category: article.categories?.name || article.category || 'Xəbər',
+    category: article.categories?.name || article.category || (locale === 'az' ? 'Xəbər' : 'News'),
     title: article.title || '',
     slug: article.slug || null,
   }));
 
   return (
-    <div className="border-b border-gray-200 pb-4 md:pb-6">
+    <div className="border-b border-border pb-4 md:pb-6">
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-0">
           {displayArticles.map((article, index) => (
@@ -94,7 +94,7 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
               className={`
                 py-3 md:py-4
                 ${index < displayArticles.length - 1 
-                  ? 'md:border-r border-gray-200 md:pr-4' 
+                  ? 'md:border-r border-border md:pr-4' 
                   : ''
                 }
                 ${index > 0 
@@ -102,15 +102,15 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
                   : ''
                 }
                 ${index < displayArticles.length - 1 && index > 0
-                  ? 'border-b md:border-b-0 border-gray-200 pb-3 md:pb-0'
+                  ? 'border-b md:border-b-0 border-border pb-3 md:pb-0'
                   : index < displayArticles.length - 1
-                  ? 'border-b md:border-b-0 border-gray-200 pb-3 md:pb-0'
+                  ? 'border-b md:border-b-0 border-border pb-3 md:pb-0'
                   : ''
                 }
               `}
             >
               <div className="mb-2">
-                <span className="text-xs font-bold text-black uppercase">
+                <span className="text-xs font-bold text-foreground uppercase">
                   {article.category}
                 </span>
               </div>
@@ -119,12 +119,12 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
                   href={`/${locale}/article/${article.slug}`}
                   className="block"
                 >
-                  <h3 className="text-sm font-bold text-black leading-tight hover:text-red-600 transition-colors">
+                  <h3 className="text-sm font-normal text-foreground leading-tight hover:text-red-600 dark:hover:text-red-400 transition-colors">
                     {article.title}
                   </h3>
                 </Link>
               ) : (
-                <h3 className="text-sm font-bold text-black leading-tight">
+                <h3 className="text-sm font-normal text-foreground leading-tight">
                   {article.title}
                 </h3>
               )}

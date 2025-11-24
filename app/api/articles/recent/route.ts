@@ -6,9 +6,12 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const locale = searchParams.get('locale') || 'az';
     const limit = parseInt(searchParams.get('limit') || '5');
+    const offset = parseInt(searchParams.get('offset') || '0');
 
-    const articles = await prisma.article.findMany({
+    // Əvvəlcə agenda=true olan xəbərləri gətir
+    const agendaArticles = await prisma.article.findMany({
       where: {
+        agenda: true,
         status: 'published',
         deletedAt: null,
         OR: [
@@ -35,8 +38,50 @@ export async function GET(req: NextRequest) {
       orderBy: {
         publishedAt: { sort: 'desc', nulls: 'last' }
       },
-      take: limit * 2, // Daha çox götür ki, title-i olmayanları filter etdikdən sonra kifayət qədər olsun
+      take: limit * 2,
     });
+
+    // Əgər agenda xəbərləri kifayət etmirsə, digər xəbərləri də gətir
+    const remainingLimit = limit - agendaArticles.length;
+    let otherArticles: typeof agendaArticles = [];
+    
+    if (remainingLimit > 0) {
+      otherArticles = await prisma.article.findMany({
+        where: {
+          agenda: false,
+          status: 'published',
+          deletedAt: null,
+          OR: [
+            { publishedAt: null },
+            { publishedAt: { lte: new Date() } }
+          ],
+        },
+        include: {
+          translations: true,
+          images: {
+            where: {
+              isPrimary: true,
+            },
+            take: 1,
+          },
+          category: {
+            include: {
+              translations: {
+                where: { locale: locale }
+              }
+            }
+          }
+        },
+        orderBy: {
+          publishedAt: { sort: 'desc', nulls: 'last' }
+        },
+        skip: offset,
+        take: remainingLimit * 2,
+      });
+    }
+
+    // Birləşdir: əvvəlcə agenda xəbərləri, sonra digərləri
+    const articles = [...agendaArticles, ...otherArticles];
 
     const formattedArticles = articles
       .map((article: typeof articles[0]) => {

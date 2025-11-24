@@ -40,7 +40,7 @@ export default function LoginPage() {
         setError('Email və ya şifrə yanlışdır. Zəhmət olmasa yenidən cəhd edin.');
       } else if (result?.ok) {
         console.log('Login successful, redirecting...');
-        window.location.href = '/admin';
+        window.location.href = '/dashboard';
       } else {
         console.error('SignIn failed - no error, no ok:', result);
         setError('Giriş uğursuz oldu. Zəhmət olmasa yenidən cəhd edin.');

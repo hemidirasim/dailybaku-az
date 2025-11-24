@@ -160,7 +160,7 @@ export default function PageForm({ page }: PageFormProps) {
       }
 
       toast.success(page ? 'Səhifə yeniləndi' : 'Səhifə yaradıldı');
-      router.push('/admin/pages');
+      router.push('/dashboard/pages');
       router.refresh();
     } catch (error) {
       toast.error('Xəta baş verdi');

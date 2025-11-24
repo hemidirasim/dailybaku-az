@@ -37,7 +37,7 @@ export async function GET() {
       take: 50, // Son 50 xəbər
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az';
     const siteName = 'Daily Baku';
     const siteDescription = 'Azərbaycanda və dünyada baş verən son xəbərlər';
 

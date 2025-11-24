@@ -17,7 +17,7 @@ export default async function ProtectedRoute({
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
-    redirect('/admin/login');
+    redirect('/dashboard/login');
   }
 
   const userRole = (session.user as any).role;
@@ -30,7 +30,7 @@ export default async function ProtectedRoute({
 
   // If requireAdmin is true, only admin can access
   if (requireAdmin) {
-    redirect('/admin/login');
+    redirect('/dashboard/login');
   }
 
   // Check permission if provided
@@ -40,7 +40,7 @@ export default async function ProtectedRoute({
     });
 
     if (!user || !user.role) {
-      redirect('/admin/login');
+      redirect('/dashboard/login');
     }
 
     // Admin role has all permissions
@@ -61,7 +61,7 @@ export default async function ProtectedRoute({
     });
 
     if (!role) {
-      redirect('/admin');
+      redirect('/dashboard');
     }
 
     const hasPermission = role.rolePermissions.some(
@@ -69,7 +69,7 @@ export default async function ProtectedRoute({
     );
 
     if (!hasPermission) {
-      redirect('/admin');
+      redirect('/dashboard');
     }
   }
 

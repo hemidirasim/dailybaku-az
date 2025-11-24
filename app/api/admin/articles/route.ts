@@ -63,6 +63,9 @@ export async function POST(req: NextRequest) {
           })) || [],
         },
       },
+      include: {
+        translations: true,
+      },
     });
 
     return NextResponse.json(article);

@@ -1,150 +1,124 @@
 'use client';
 
-import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { format, formatDistanceToNow } from 'date-fns';
+import { az, enUS } from 'date-fns/locale';
+import { Clock } from 'lucide-react';
 
-const demoImages = [
-  'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/1591055/pexels-photo-1591055.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184460/pexels-photo-3184460.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184357/pexels-photo-3184357.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184306/pexels-photo-3184306.jpeg?auto=compress&cs=tinysrgb&w=800',
-  'https://images.pexels.com/photos/3184325/pexels-photo-3184325.jpeg?auto=compress&cs=tinysrgb&w=800',
-];
-
-async function getArticles() {
-  const { data: articles } = await supabase
-    .from('articles')
-    .select('*, categories(*)')
-    .order('published_at', { ascending: false })
-    .limit(6);
-
-  if (!articles) return [];
-  
-  return articles.map((article, index) => ({
-    ...article,
-    image_url: article.image_url || demoImages[index % demoImages.length],
-  }));
+async function getWorldArticles(locale: string = 'az', limit: number = 6) {
+  try {
+    const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az');
+    const response = await fetch(
+      `${baseUrl}/api/articles/category/dunya?locale=${locale}&limit=${limit}`,
+      { cache: 'no-store' }
+    );
+    
+    if (!response.ok) return [];
+    
+    const articles = await response.json();
+    return articles.map((article: any) => ({
+      ...article,
+      image_url: article.image_url || article.image || article.imageUrl || null,
+      categories: article.category ? { name: article.category, slug: article.category_slug || 'dunya' } : null,
+      published_at: article.published_at,
+      excerpt: article.excerpt || '',
+    }));
+  } catch (error) {
+    console.error('Error fetching world articles:', error);
+    return [];
+  }
 }
 
 export default function RegionalNewsSection() {
   const pathname = usePathname();
   const [articles, setArticles] = useState<any[]>([]);
   const [locale, setLocale] = useState('az');
+  const [mounted, setMounted] = useState(false);
+
+  const dateLocale = useMemo(() => (locale === 'az' ? az : enUS), [locale]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const segments = pathname.split('/');
     const currentLocale = segments[1] === 'en' ? 'en' : 'az';
     setLocale(currentLocale);
 
-    getArticles().then(setArticles);
+    // Dünya xəbərləri gətir
+    getWorldArticles(currentLocale, 6).then(setArticles);
   }, [pathname]);
 
-  const defaultArticles = [
-    {
-      id: 1,
-      category: 'Culture',
-      title: 'Incongruous Jeepers Jellyfish One Far Well Known',
-      excerpt: 'Within spread beside the ouch sulky and this wonderfully and as the well and where',
-      slug: null,
-    },
-    {
-      id: 2,
-      category: 'Politic , Sport',
-      title: 'This Nudged Jeepers While Much The Less',
-      excerpt: 'Within spread beside the ouch sulky and this wonderfully and as the well and where',
-      slug: null,
-    },
-  ];
 
-  const regions = [
-    { name: 'EUROPE', subtitle: 'SUBTITLE' },
-    { name: 'ASIA', subtitle: 'SUBTITLE' },
-    { name: 'MIDDLE EAST', subtitle: 'SUBTITLE' },
-  ];
-
-  // Her bölge için 2 makale
-  const getArticlesForRegion = (regionIndex: number) => {
-    if (articles.length >= 6) {
-      const startIndex = regionIndex * 2;
-      return articles.slice(startIndex, startIndex + 2).map(a => ({
-        category: a.categories?.name || 'Culture',
-        title: a.title,
-        excerpt: a.excerpt || 'Within spread beside the ouch sulky and this wonderfully and as the well and where',
-        slug: a.slug,
-      }));
-    }
-    return defaultArticles;
-  };
+  // Dünya xəbərləri - hamısı Dünya kateqoriyasından
+  const worldArticles = articles.slice(0, 6).map(a => ({
+    category: a.categories?.name || a.category || (locale === 'az' ? 'Dünya' : 'World'),
+    title: a.title,
+    excerpt: a.excerpt || '',
+    slug: a.slug,
+    published_at: a.published_at,
+  }));
 
   return (
-    <div className="border-b border-gray-200 pb-6">
+    <div className="border-b border-border pb-4">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
-          {regions.map((region, regionIndex) => {
-            const regionArticles = getArticlesForRegion(regionIndex);
-            return (
-              <div
-                key={regionIndex}
-                className={`${
-                  regionIndex < regions.length - 1 ? 'border-r border-gray-200 pr-6' : ''
-                } ${regionIndex > 0 ? 'pl-6' : ''}`}
-              >
-                {/* Region Header */}
-                <div className="mb-4 pb-3 border-b border-gray-200">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-red-600 uppercase">
-                      {region.name}
-                    </h3>
-                    <span className="text-xs font-normal text-gray-400 uppercase">
-                      {region.subtitle}
-                    </span>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          {/* Left Column - Dünya Header */}
+          <div className="lg:col-span-3">
+            <div className="mb-3 pb-2 border-b border-border">
+              <h3 className="text-xs font-bold text-foreground capitalize">
+                {locale === 'az' ? 'Dünya' : 'World'}
+              </h3>
+            </div>
+          </div>
 
-                {/* Articles */}
-                <div className="space-y-6">
-                  {regionArticles.map((article, articleIndex) => (
-                    <div
-                      key={articleIndex}
-                      className={`${
-                        articleIndex < regionArticles.length - 1
-                          ? 'border-b border-gray-200 pb-6'
-                          : ''
-                      }`}
-                    >
-                      <div className="mb-2">
-                        <span className="text-xs font-bold text-black uppercase">
-                          {article.category}
-                        </span>
-                      </div>
-                      {article.slug ? (
-                        <Link
-                          href={`/${locale}/article/${article.slug}`}
-                          className="block"
-                        >
-                          <h3 className="text-base font-bold text-black leading-tight mb-2 hover:text-red-600 transition-colors">
-                            {article.title}
-                          </h3>
-                        </Link>
-                      ) : (
-                        <h3 className="text-base font-bold text-black leading-tight mb-2">
-                          {article.title}
-                        </h3>
-                      )}
-                      <p className="text-sm text-gray-600 leading-relaxed">
-                        {article.excerpt}
-                      </p>
-                    </div>
-                  ))}
+          {/* Right Column - Articles */}
+          <div className="lg:col-span-9">
+            <div className="space-y-4">
+              {worldArticles.length === 0 && (
+                <div className="text-xs text-muted-foreground">
+                  {locale === 'az' ? 'Xəbərlər yüklənir...' : 'Loading news...'}
                 </div>
-              </div>
-            );
-          })}
+              )}
+              {worldArticles.map((article, articleIndex) => (
+                <div
+                  key={articleIndex}
+                  className={articleIndex < worldArticles.length - 1 ? 'pb-3 border-b border-border' : ''}
+                >
+                  {article.slug ? (
+                    <Link
+                      href={`/${locale}/article/${article.slug}`}
+                      className="block group"
+                    >
+                      <h3 className="text-sm font-bold text-foreground leading-snug mb-1.5 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
+                        {article.title}
+                      </h3>
+                    </Link>
+                  ) : (
+                    <h3 className="text-sm font-bold text-foreground leading-snug mb-1.5">
+                      {article.title}
+                    </h3>
+                  )}
+                  {article.excerpt && (
+                    <p className="text-xs text-muted-foreground leading-relaxed mb-1.5 line-clamp-2">
+                      {article.excerpt}
+                    </p>
+                  )}
+                  {article.published_at && mounted && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      <span>
+                        {format(new Date(article.published_at), 'HH:mm', { locale: dateLocale })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

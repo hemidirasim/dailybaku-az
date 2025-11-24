@@ -142,7 +142,7 @@ export default function AdvertisementForm({ advertisement }: AdvertisementFormPr
       }
 
       toast.success(advertisement ? 'Reklam yeniləndi' : 'Reklam yaradıldı');
-      router.push('/admin/advertisements');
+      router.push('/dashboard/advertisements');
       router.refresh();
     } catch (error) {
       toast.error('Xəta baş verdi');

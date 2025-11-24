@@ -7,6 +7,7 @@ import Link from 'next/link';
 interface AdvertisementProps {
   position: string;
   locale?: string;
+  className?: string;
 }
 
 interface AdvertisementData {
@@ -16,7 +17,7 @@ interface AdvertisementData {
   linkUrl: string | null;
 }
 
-export function Advertisement({ position, locale = 'az' }: AdvertisementProps) {
+export function Advertisement({ position, locale = 'az', className = '' }: AdvertisementProps) {
   const [advertisement, setAdvertisement] = useState<AdvertisementData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -64,7 +65,7 @@ export function Advertisement({ position, locale = 'az' }: AdvertisementProps) {
     );
 
     return (
-      <div className="my-4 flex justify-center">
+      <div className={`my-4 flex justify-center ${className}`}>
         {content}
       </div>
     );
@@ -73,7 +74,7 @@ export function Advertisement({ position, locale = 'az' }: AdvertisementProps) {
   if (advertisement.type === 'html' && advertisement.htmlCode) {
     return (
       <div
-        className="my-4"
+        className={`my-4 ${className}`}
         dangerouslySetInnerHTML={{ __html: advertisement.htmlCode }}
       />
     );

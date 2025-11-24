@@ -98,7 +98,7 @@ export default function UserForm({ user }: UserFormProps) {
       }
 
       toast.success(user ? 'İstifadəçi yeniləndi' : 'İstifadəçi yaradıldı');
-      router.push('/admin/users');
+      router.push('/dashboard/users');
       router.refresh();
     } catch (error: any) {
       toast.error(error.message || 'Xəta baş verdi');

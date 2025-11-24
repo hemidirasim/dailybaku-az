@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Moon, Sun, X, Menu, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
+import { Search, Moon, Sun, X, Menu, Facebook, Twitter, Instagram, Youtube, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -32,12 +32,52 @@ export default function Header({
 }) {
   const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Dark mode-u HTML elementinə tətbiq et
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  // LocalStorage-dan dark mode-u yüklə
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      setDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else if (savedTheme === 'light') {
+      setDarkMode(false);
+      document.documentElement.classList.remove('dark');
+    } else {
+      // Sistem preferansını yoxla
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (prefersDark) {
+        setDarkMode(true);
+        document.documentElement.classList.add('dark');
+      }
+    }
+  }, []);
+
+  // Dark mode dəyişdikdə localStorage-a yadda saxla
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    if (newDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
+
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -60,6 +100,20 @@ export default function Header({
     router.refresh();
   };
 
+  // Life Style kateqoriyası üçün "LİFE" sözündəki "İ" hərfini "I" ilə əvəz et
+  const formatMenuTitle = (title: string) => {
+    // Life Style kateqoriyasını müəyyən et (hər hansı bir variantda)
+    // "LİFE" və ya "LIFE" sözünü axtar
+    const hasLife = /LİFE|LIFE/i.test(title);
+    
+    if (hasLife) {
+      // Yalnız "LİFE" sözündəki "İ" hərfini "I" ilə əvəz et, digər "İ" hərfləri qalsın
+      // Regex ilə "LİFE" sözünü tap və "LIFE" ilə əvəz et (case-insensitive)
+      return title.replace(/LİFE/gi, 'LIFE');
+    }
+    return title;
+  };
+
   // Search açılanda input-a focus et
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {
@@ -67,42 +121,21 @@ export default function Header({
     }
   }, [searchOpen]);
 
-  // Search funksiyası
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
+  // Enter basıldıqda search səhifəsinə keçid
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim().length > 0) {
+      e.preventDefault();
+      router.push(`/${locale}/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+      setSearchQuery('');
     }
-
-    if (searchQuery.trim().length < 2) {
-      setSearchResults([]);
-      return;
-    }
-
-    searchTimeoutRef.current = setTimeout(async () => {
-      setSearchLoading(true);
-      try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&locale=${locale}`);
-        const data = await response.json();
-        setSearchResults(data.results || []);
-      } catch (error) {
-        console.error('Search error:', error);
-        setSearchResults([]);
-      } finally {
-        setSearchLoading(false);
-      }
-    }, 300);
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [searchQuery, locale]);
+  };
 
   return (
-    <header className="bg-background border-b">
-      {headerNews}
-      <div className="max-w-7xl mx-auto px-4 py-4">
+    <>
+      <header className="bg-background border-b">
+        {headerNews}
+        <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Desktop Header */}
         <div className="hidden md:flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -130,10 +163,15 @@ export default function Header({
 
           <Link href={`/${locale}`} className="flex-shrink-0">
             <div
-              className="font-bold text-center"
+              className="font-bold text-center dark:font-normal"
               style={{ fontFamily: 'Chomsky, serif', fontSize: '3.67rem' }}
             >
               Daily Baku
+              {locale === 'en' && (
+                <div className="text-sm font-normal" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                  International
+                </div>
+              )}
             </div>
           </Link>
 
@@ -147,7 +185,7 @@ export default function Header({
                 <SelectItem value="az">AZ</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)}>
+            <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
               {darkMode ? (
                 <Sun className="h-5 w-5" />
               ) : (
@@ -163,16 +201,27 @@ export default function Header({
           <div className="flex justify-center">
             <Link href={`/${locale}`} className="flex justify-center">
               <div
-                className="font-bold text-center"
+                className="font-bold text-center dark:font-normal"
                 style={{ fontFamily: 'Chomsky, serif', fontSize: '3rem' }}
               >
                 Daily Baku
+                {locale === 'en' && (
+                  <div className="text-sm font-normal" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                    International
+                  </div>
+                )}
               </div>
             </Link>
           </div>
+        </div>
+      </div>
+      </header>
 
+      {/* Mobile Sticky Controls - Outside header */}
+      <div className="md:hidden sticky top-0 z-50 bg-background border-b border-border">
+        <div className="max-w-7xl mx-auto px-4">
           {/* Bottom row: Burger (left), Theme toggle (after burger), Language selector (before search), Search (right) */}
-          <div className="flex items-center gap-2 relative">
+          <div className="flex items-center gap-2 relative py-2">
             <Button
               variant="ghost"
               size="icon"
@@ -185,7 +234,7 @@ export default function Header({
                 <Menu className="h-6 w-6" />
               )}
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => setDarkMode(!darkMode)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={toggleDarkMode}>
               {darkMode ? (
                 <Sun className="h-4 w-4" />
               ) : (
@@ -206,49 +255,27 @@ export default function Header({
             )}
             {searchOpen ? (
               <div 
-                className="absolute right-0 top-0 overflow-hidden z-50"
+                className="absolute right-0 top-0 overflow-hidden z-50 md:hidden"
                 style={{
                   animation: 'slideInFromRight 0.3s ease-out',
-                  width: '12rem'
+                  width: '8rem'
                 }}
               >
                 <Input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Axtarış..."
+                  placeholder={locale === 'az' ? 'Axtarış...' : 'Search...'}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-gray-50 border-gray-200"
+                  onKeyDown={handleSearchKeyDown}
+                  className="bg-muted border-border"
                   onBlur={() => {
                     setTimeout(() => {
-                      if (searchResults.length === 0) {
-                        setSearchOpen(false);
-                        setSearchQuery('');
-                      }
+                      setSearchOpen(false);
+                      setSearchQuery('');
                     }, 200);
                   }}
                 />
-                {searchResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
-                    {searchResults.map((result) => (
-                      <Link
-                        key={result.id}
-                        href={`/${locale}/article/${result.slug}`}
-                        className="block p-3 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
-                        onClick={() => {
-                          setSearchOpen(false);
-                          setSearchQuery('');
-                          setSearchResults([]);
-                        }}
-                      >
-                        <div className="font-medium text-sm">{result.title}</div>
-                        {result.excerpt && (
-                          <div className="text-xs text-gray-500 mt-1 line-clamp-2">{result.excerpt}</div>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                )}
               </div>
             ) : (
               <Button variant="ghost" size="icon" className="flex-shrink-0" onClick={() => setSearchOpen(true)}>
@@ -257,35 +284,51 @@ export default function Header({
             )}
           </div>
         </div>
+      </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t pt-4">
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-background border-b border-border">
+          <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Dil:</span>
-                <Select value={locale} onValueChange={handleLanguageChange}>
-                  <SelectTrigger className="w-auto min-w-[70px] h-9 rounded-none border-none px-2 gap-1 !justify-start focus:ring-0 focus:ring-offset-0" style={{ border: 'none' }}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">EN</SelectItem>
-                    <SelectItem value="az">AZ</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Tema:</span>
-                <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)}>
-                  {darkMode ? (
-                    <Sun className="h-5 w-5" />
-                  ) : (
-                    <Moon className="h-5 w-5" />
-                  )}
-                </Button>
+              {/* Settings Collapse */}
+              <div>
+                <button
+                  onClick={() => setSettingsOpen(!settingsOpen)}
+                  className="flex items-center justify-between w-full text-sm font-medium hover:text-primary transition-colors"
+                >
+                  <span>{locale === 'az' ? 'Parametrlər' : 'Settings'}</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${settingsOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {settingsOpen && (
+                  <div className="mt-2 pl-4 space-y-3 border-l-2 border-border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{locale === 'az' ? 'Dil:' : 'Language:'}</span>
+                      <Select value={locale} onValueChange={handleLanguageChange}>
+                        <SelectTrigger className="w-auto min-w-[70px] h-9 rounded-none border-none px-2 gap-1 !justify-start focus:ring-0 focus:ring-offset-0" style={{ border: 'none' }}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="en">EN</SelectItem>
+                          <SelectItem value="az">AZ</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{locale === 'az' ? 'Tema:' : 'Theme:'}</span>
+                      <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
+                        {darkMode ? (
+                          <Sun className="h-5 w-5" />
+                        ) : (
+                          <Moon className="h-5 w-5" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2 pt-2 border-t">
-                <span className="text-sm font-medium">Sosial şəbəkələr:</span>
+                <span className="text-sm font-medium">{locale === 'az' ? 'Sosial şəbəkələr:' : 'Social networks:'}</span>
                 <div className="flex items-center gap-1">
                   <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" asChild>
                     <Link href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
@@ -310,137 +353,117 @@ export default function Header({
                 </div>
               </div>
               <Link href={`/${locale}`} className="text-sm font-medium hover:text-primary transition-colors">
-                Ana Səhifə
+                {locale === 'az' ? 'Ana Səhifə' : 'Home'}
               </Link>
             </div>
+            {/* Mobile Navigation */}
+            <nav className="flex flex-col gap-3 mt-4 pt-4 border-t border-border" lang={locale}>
+            {menus.length > 0 ? (
+              menus.map((menu) => (
+                <Link
+                  key={menu.id}
+                  href={menu.url}
+                  className="hover:text-primary transition-colors capitalize text-sm font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {formatMenuTitle(menu.title)}
+                </Link>
+              ))
+            ) : (
+              <>
+                <Link
+                  href={`/${locale}`}
+                  className="hover:text-primary transition-colors capitalize text-sm font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {locale === 'az' ? 'Ana Səhifə' : 'Home'}
+                </Link>
+                <Link
+                  href={`/${locale}/category/gundem`}
+                  className="hover:text-primary transition-colors capitalize text-sm font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {locale === 'az' ? 'Gündəm' : 'Agenda'}
+                </Link>
+              </>
+            )}
+          </nav>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center justify-center gap-6 text-sm font-medium mt-4 relative">
+      {/* Desktop Navigation - Sticky */}
+      <nav
+        className="hidden md:flex items-center justify-center gap-6 text-sm font-medium sticky top-0 z-50 bg-background border-b border-border py-2"
+        lang={locale}
+      >
+        <div className="max-w-7xl mx-auto px-4 w-full flex items-center justify-between">
           <div className="flex items-center gap-6 flex-1 justify-center">
             {menus.length > 0 ? (
               menus.map((menu) => (
                 <Link
                   key={menu.id}
                   href={menu.url}
-                  className="hover:text-primary transition-colors uppercase whitespace-nowrap"
+                  className="hover:text-primary transition-colors capitalize whitespace-nowrap"
                 >
-                  {menu.title}
+                  {formatMenuTitle(menu.title)}
                 </Link>
               ))
             ) : (
               <>
                 <Link
                   href={`/${locale}`}
-                  className="hover:text-primary transition-colors uppercase whitespace-nowrap"
+                  className="hover:text-primary transition-colors capitalize whitespace-nowrap"
                 >
-                  Ana Səhifə
+                  {locale === 'az' ? 'Ana Səhifə' : 'Home'}
                 </Link>
                 <Link
                   href={`/${locale}/category/gundem`}
-                  className="hover:text-primary transition-colors uppercase whitespace-nowrap"
+                  className="hover:text-primary transition-colors capitalize whitespace-nowrap"
                 >
-                  Gündəm
+                  {locale === 'az' ? 'Gündəm' : 'Agenda'}
                 </Link>
               </>
             )}
           </div>
-          <div className="flex items-center gap-2 relative">
-            {searchOpen && (
+          <div className="relative flex items-center w-9 h-9 flex-shrink-0">
+            {searchOpen ? (
               <div 
-                className="absolute right-0 top-0 overflow-hidden z-50"
+                className="absolute right-0 top-0 z-50"
                 style={{
-                  animation: 'slideInFromRight 0.3s ease-out',
+                  animation: 'slideInFromLeft 0.3s ease-out',
                   width: '12rem'
                 }}
               >
                 <Input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Axtarış..."
+                  placeholder={locale === 'az' ? 'Axtarış...' : 'Search...'}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-gray-50 border-gray-200"
+                  onKeyDown={handleSearchKeyDown}
+                  className="bg-muted border-border h-9"
                   onBlur={() => {
                     setTimeout(() => {
-                      if (searchResults.length === 0) {
-                        setSearchOpen(false);
-                        setSearchQuery('');
-                      }
+                      setSearchOpen(false);
+                      setSearchQuery('');
                     }, 200);
                   }}
                 />
-                {searchResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
-                    {searchResults.map((result) => (
-                      <Link
-                        key={result.id}
-                        href={`/${locale}/article/${result.slug}`}
-                        className="block p-3 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
-                        onClick={() => {
-                          setSearchOpen(false);
-                          setSearchQuery('');
-                          setSearchResults([]);
-                        }}
-                      >
-                        <div className="font-medium text-sm">{result.title}</div>
-                        {result.excerpt && (
-                          <div className="text-xs text-gray-500 mt-1 line-clamp-2">{result.excerpt}</div>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                )}
               </div>
-            )}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="rounded-full" 
-              onClick={() => setSearchOpen(true)}
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-          </div>
-        </nav>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <nav className="md:hidden flex flex-col gap-3 mt-4 pb-4 border-t pt-4">
-            {menus.length > 0 ? (
-              menus.map((menu) => (
-                <Link
-                  key={menu.id}
-                  href={menu.url}
-                  className="hover:text-primary transition-colors uppercase text-sm font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {menu.title}
-                </Link>
-              ))
             ) : (
-              <>
-                <Link
-                  href={`/${locale}`}
-                  className="hover:text-primary transition-colors uppercase text-sm font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Ana Səhifə
-                </Link>
-                <Link
-                  href={`/${locale}/category/gundem`}
-                  className="hover:text-primary transition-colors uppercase text-sm font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Gündəm
-                </Link>
-              </>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full h-9 w-9 flex-shrink-0" 
+                onClick={() => setSearchOpen(true)}
+              >
+                <Search className="h-5 w-5" />
+              </Button>
             )}
-          </nav>
-        )}
-      </div>
-
-    </header>
+          </div>
+        </div>
+      </nav>
+    </>
   );
 }

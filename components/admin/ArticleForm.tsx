@@ -154,7 +154,7 @@ export default function ArticleForm({ article, categories = [], users = [], defa
   const [tagPopoverOpen, setTagPopoverOpen] = useState(false);
   const [newTagName, setNewTagName] = useState({ az: '', en: '' });
   const [creatingTag, setCreatingTag] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [commandSearch, setCommandSearch] = useState('');
   const [availableGalleryTemplates, setAvailableGalleryTemplates] = useState<Array<{
     id: string;
     slug: string;
@@ -353,38 +353,78 @@ export default function ArticleForm({ article, categories = [], users = [], defa
     setImages(newImages);
   };
 
-  const handleCreateTag = async () => {
-    const tagName = newTagName.az.trim() || searchQuery.trim();
-    if (!tagName) {
+  const handleCreateTag = async (tagNameInput?: string) => {
+    const inputText = tagNameInput || newTagName.az.trim() || commandSearch.trim();
+    if (!inputText) {
+      toast.error('Tag adı (AZ) tələb olunur');
+      return;
+    }
+
+    // Virgül ilə ayrılmış tag-ları parse et
+    // Hər bir vergüldən sonra ayrı tag kimi qəbul et
+    const tagNames = inputText
+      .split(',')
+      .map(t => t.trim())
+      .filter(t => t.length > 0);
+    
+    if (tagNames.length === 0) {
       toast.error('Tag adı (AZ) tələb olunur');
       return;
     }
 
     setCreatingTag(true);
     try {
-      const slug = generateSlug(tagName);
-      const response = await fetch('/api/admin/tags', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          slug,
-          az: { name: tagName },
-          en: { name: newTagName.en || tagName },
-        }),
-      });
+      const createdTags: string[] = [];
+      let updatedAvailableTags = [...availableTags];
+      let updatedSelectedTags = [...selectedTags];
+      
+      // Hər bir tag üçün
+      for (const tagName of tagNames) {
+        // Mövcud tag-ları yoxla (həm əvvəlki availableTags-də, həm də yeni yaradılanlarda)
+        const existingTag = updatedAvailableTags.find(t => {
+          const azName = t.translations?.find((tr) => tr.locale === 'az')?.name || '';
+          return azName.toLowerCase() === tagName.toLowerCase();
+        });
 
-      if (!response.ok) {
-        throw new Error('Tag yaradılmadı');
+        if (existingTag) {
+          // Mövcud tag varsa, seç
+          if (!updatedSelectedTags.includes(existingTag.id)) {
+            updatedSelectedTags.push(existingTag.id);
+          }
+          createdTags.push(existingTag.id);
+        } else {
+          // Yeni tag yarat
+          const slug = generateSlug(tagName);
+          const response = await fetch('/api/admin/tags', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slug,
+              az: { name: tagName },
+              en: { name: newTagName.en || tagName },
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Tag "${tagName}" yaradılmadı`);
+          }
+
+          const newTag = await response.json();
+          // Yeni tagı availableTags-ə əlavə et ki, növbəti tag yoxlanarkən görünsün
+          updatedAvailableTags.push(newTag);
+          updatedSelectedTags.push(newTag.id);
+          createdTags.push(newTag.id);
+        }
       }
 
-      const newTag = await response.json();
-      setAvailableTags([...availableTags, newTag]);
-      setSelectedTags([...selectedTags, newTag.id]);
+      // State-ləri yenilə
+      setAvailableTags(updatedAvailableTags);
+      setSelectedTags(updatedSelectedTags);
       setNewTagName({ az: '', en: '' });
-      setSearchQuery('');
-      toast.success('Tag yaradıldı və seçildi');
-    } catch (error) {
-      toast.error('Tag yaradılmadı');
+      setCommandSearch('');
+      toast.success(`${tagNames.length} tag ${tagNames.length === 1 ? 'yaradıldı və seçildi' : 'yaradıldı və seçildi'}`);
+    } catch (error: any) {
+      toast.error(error.message || 'Tag yaradılmadı');
     } finally {
       setCreatingTag(false);
     }
@@ -437,12 +477,47 @@ export default function ArticleForm({ article, categories = [], users = [], defa
         throw new Error('Xəta baş verdi');
       }
 
+      const result = await response.json();
+      
       toast.success(
         processedData.status === 'draft'
           ? (article ? 'Qaralama yeniləndi' : 'Qaralama yaradıldı')
           : (article ? 'Xəbər yeniləndi' : 'Xəbər yaradıldı')
       );
-      router.push('/admin/articles');
+      
+      // Locale-i müəyyən et
+      let locale = 'az';
+      
+      if (article) {
+        // Edit zamanı: mövcud article-dan locale-i tap
+        const azTranslation = article.translations?.find((t: any) => t.locale === 'az');
+        const enTranslation = article.translations?.find((t: any) => t.locale === 'en');
+        if (azTranslation?.title && azTranslation.title.trim() !== '') {
+          locale = 'az';
+        } else if (enTranslation?.title && enTranslation.title.trim() !== '') {
+          locale = 'en';
+        }
+      } else {
+        // Yeni xəbər üçün: response-dan gələn article məlumatına bax
+        if (result?.translations) {
+          const azTranslation = result.translations.find((t: any) => t.locale === 'az');
+          const enTranslation = result.translations.find((t: any) => t.locale === 'en');
+          if (azTranslation?.title && azTranslation.title.trim() !== '') {
+            locale = 'az';
+          } else if (enTranslation?.title && enTranslation.title.trim() !== '') {
+            locale = 'en';
+          }
+        } else {
+          // Fallback: form data-dan
+          if (data.az?.title && data.az.title.trim() !== '') {
+            locale = 'az';
+          } else if (data.en?.title && data.en.title.trim() !== '') {
+            locale = 'en';
+          }
+        }
+      }
+      
+      router.push(`/dashboard/articles/${locale}`);
       router.refresh();
     } catch (error) {
       toast.error('Xəta baş verdi');
@@ -766,21 +841,23 @@ export default function ArticleForm({ article, categories = [], users = [], defa
                 </Select>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="featured"
-                  checked={watch('featured')}
-                  onCheckedChange={(checked) => setValue('featured', checked)}
-                />
-                <Label htmlFor="featured">Featured</Label>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="agenda"
-                  checked={watch('agenda')}
-                  onCheckedChange={(checked) => setValue('agenda', checked)}
-                />
-                <Label htmlFor="agenda">Agenda</Label>
-              </div>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="featured"
+                    checked={watch('featured')}
+                    onCheckedChange={(checked) => setValue('featured', checked)}
+                  />
+                  <Label htmlFor="featured">Manşet</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="agenda"
+                    checked={watch('agenda')}
+                    onCheckedChange={(checked) => setValue('agenda', checked)}
+                  />
+                  <Label htmlFor="agenda">Üst xəbər</Label>
+                </div>
               </div>
 
               <div>
@@ -800,9 +877,15 @@ export default function ArticleForm({ article, categories = [], users = [], defa
                   <PopoverContent className="w-[400px] p-0">
                     <Command shouldFilter={true}>
                       <CommandInput 
-                        placeholder="Tag axtarın..." 
-                        value={searchQuery}
-                        onValueChange={setSearchQuery}
+                        placeholder="Tag axtarın və ya yeni tag yazın (virgül ilə ayrılmış: ilham əliyev, ərdoğan)" 
+                        onValueChange={setCommandSearch}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && commandSearch.trim()) {
+                            e.preventDefault();
+                            handleCreateTag(commandSearch);
+                            setCommandSearch('');
+                          }
+                        }}
                       />
                       <CommandList>
                         <CommandGroup>
@@ -834,46 +917,46 @@ export default function ArticleForm({ article, categories = [], users = [], defa
                         </CommandGroup>
                         <CommandEmpty>
                           <div className="py-4 px-2 space-y-3">
-                            <p className="text-sm text-gray-500 text-center">
-                              "{searchQuery}" adlı tag tapılmadı.
+                            <p className="text-sm text-muted-foreground text-center">
+                              Tag tapılmadı
                             </p>
-                            <div className="border-t pt-3 space-y-2">
-                              <p className="text-sm font-medium">Yeni tag yarat</p>
-                              <div className="space-y-2">
-                                <Input
-                                  placeholder="Tag adı (AZ)"
-                                  value={newTagName.az || searchQuery}
-                                  onChange={(e) => setNewTagName({ ...newTagName, az: e.target.value })}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      handleCreateTag();
-                                    }
-                                  }}
-                                />
-                                <Input
-                                  placeholder="Tag adı (EN) - İstəyə bağlı"
-                                  value={newTagName.en}
-                                  onChange={(e) => setNewTagName({ ...newTagName, en: e.target.value })}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      handleCreateTag();
-                                    }
-                                  }}
-                                />
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  className="w-full"
-                                  onClick={handleCreateTag}
-                                  disabled={creatingTag || !(newTagName.az.trim() || searchQuery.trim())}
-                                >
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  {creatingTag ? 'Yaradılır...' : `"${searchQuery || newTagName.az || 'Yeni tag'}" yarat`}
-                                </Button>
+                            {commandSearch.trim() && (
+                              <div className="border-t pt-3 space-y-2">
+                                <p className="text-sm font-medium">Yeni tag yarat</p>
+                                <div className="space-y-2">
+                                  <Input
+                                    placeholder="Tag adı (virgül ilə ayrılmış: ilham əliyev, afen plazada yanğın, ərdoğan)"
+                                    value={newTagName.az || commandSearch}
+                                    onChange={(e) => setNewTagName({ ...newTagName, az: e.target.value })}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' && (newTagName.az || commandSearch).trim()) {
+                                        e.preventDefault();
+                                        handleCreateTag(newTagName.az || commandSearch);
+                                        setNewTagName({ az: '', en: '' });
+                                        setCommandSearch('');
+                                      }
+                                    }}
+                                  />
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={() => {
+                                      const tagToCreate = newTagName.az || commandSearch;
+                                      if (tagToCreate.trim()) {
+                                        handleCreateTag(tagToCreate);
+                                        setNewTagName({ az: '', en: '' });
+                                        setCommandSearch('');
+                                      }
+                                    }}
+                                    disabled={creatingTag || !(newTagName.az || commandSearch).trim()}
+                                  >
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    {creatingTag ? 'Yaradılır...' : `"${newTagName.az || commandSearch || 'Yeni tag'}" yarat`}
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
+                            )}
                           </div>
                         </CommandEmpty>
                       </CommandList>
