@@ -10,8 +10,6 @@ const nextConfig = {
     domains: ['images.pexels.com'],
     unoptimized: true,
   },
-  // Cloudflare Pages üçün
-  output: 'standalone',
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {

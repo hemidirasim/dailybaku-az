@@ -29,19 +29,7 @@ import dynamic from 'next/dynamic';
 
 // Quill editor-u dinamik import ilə yüklə (SSR problemi üçün)
 const ReactQuill = dynamic(
-  async () => {
-    const { default: RQ } = await import('react-quill');
-    // CSS-i dinamik yüklə
-    if (typeof window !== 'undefined') {
-      const link = document.createElement('link');
-      link.href = 'https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css';
-      link.rel = 'stylesheet';
-      if (!document.querySelector(`link[href="${link.href}"]`)) {
-        document.head.appendChild(link);
-      }
-    }
-    return RQ;
-  },
+  () => import('react-quill').then((mod) => ({ default: mod.default })),
   { 
     ssr: false,
     loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded" />
@@ -139,6 +127,21 @@ export default function ArticleForm({ article, categories = [], users = [], defa
       isPrimary: img.isPrimary,
     })) || []
   );
+  const [quillLoaded, setQuillLoaded] = useState(false);
+
+  // Quill CSS-i yüklə
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !quillLoaded) {
+      const link = document.createElement('link');
+      link.href = 'https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css';
+      link.rel = 'stylesheet';
+      if (!document.querySelector(`link[href="${link.href}"]`)) {
+        document.head.appendChild(link);
+        setQuillLoaded(true);
+      }
+    }
+  }, [quillLoaded]);
+
   const [availableCategories, setAvailableCategories] = useState(categories);
   const [availableUsers, setAvailableUsers] = useState<ArticleUser[]>(users);
   const [availableTags, setAvailableTags] = useState<Array<{
