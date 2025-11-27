@@ -140,7 +140,7 @@ export default async function LocaleLayout({
         menus={headerMenus}
         locale={locale}
       />
-      <TopArticles />
+      <TopArticles locale={locale} />
       {children}
       <Footer menus={footerMenus} locale={locale} />
       {locale === 'en' && <ReplaceICharacter />}

@@ -176,7 +176,7 @@ export default async function SearchPage({
                 href={`/${locale}/article/${article.slug}`}
                 className="block group"
               >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border-b border-border hover:bg-muted/50 transition-colors">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border-b border-border hover:bg-muted/50 transition-colors">
                   {article.image_url && (
                     <div className="relative w-full h-32 md:h-24 rounded-lg overflow-hidden">
                       <Image
@@ -184,11 +184,11 @@ export default async function SearchPage({
                         alt={article.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 768px) 100vw, 33vw"
+                        sizes="(max-width: 768px) 100vw, 20vw"
                       />
                     </div>
                   )}
-                  <div className={article.image_url ? 'md:col-span-2' : 'md:col-span-3'}>
+                  <div className={article.image_url ? 'md:col-span-4' : 'md:col-span-5'}>
                     {article.category && (
                       <span className="text-xs font-bold text-red-600 uppercase mb-2 block">
                         {article.category}

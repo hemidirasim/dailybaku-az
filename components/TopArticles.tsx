@@ -24,9 +24,9 @@ async function getTopArticles(offset: number = 0, locale: string = 'az') {
   }
 }
 
-export default function TopArticles({ offset = 0 }: { offset?: number }) {
+export default function TopArticles({ offset = 0, locale: propLocale }: { offset?: number; locale?: string }) {
   const [articles, setArticles] = useState<any[]>([]);
-  const [locale, setLocale] = useState('az');
+  const [locale, setLocale] = useState(propLocale || 'az');
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pathname, setPathname] = useState<string>('');
@@ -40,7 +40,7 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
     setPathname(currentPathname);
     
     const segments = currentPathname.split('/');
-    const currentLocale = segments[1] === 'en' ? 'en' : 'az';
+    const currentLocale = propLocale || (segments[1] === 'en' ? 'en' : 'az');
     setLocale(currentLocale);
     setLoading(true);
 
@@ -65,7 +65,7 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
   // Show loading state
   if (loading) {
     return (
-      <div className={`border-b border-border pb-4 md:pb-6 ${isArticlePage ? 'lg:block hidden' : ''}`}>
+      <div className={`border-b border-border pb-4 md:pb-6 ${isArticlePage ? 'lg:block hidden' : 'hidden lg:block'}`}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-0">
             {[1, 2, 3, 4].map((i) => (
@@ -93,7 +93,7 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
   }));
 
   return (
-    <div className={`border-b border-border pb-4 md:pb-6 ${isArticlePage ? 'lg:block hidden' : ''}`}>
+    <div className={`border-b border-border pb-4 md:pb-6 ${isArticlePage ? 'lg:block hidden' : 'hidden lg:block'}`}>
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-0">
           {displayArticles.map((article, index) => (
