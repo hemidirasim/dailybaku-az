@@ -271,10 +271,10 @@ async function ArticlesContent({
                         </PermissionGate>
                         <PermissionGate permission="articles.delete" showWhileLoading={true}>
                           <DeleteButton
-                            itemId={article.id}
-                            itemName={translation?.title || 'Xəbər'}
-                            apiPath={`/api/admin/articles/${article.id}`}
+                            id={article.id}
+                            endpoint={`/api/admin/articles/${article.id}`}
                             redirectUrl={`/dashboard/articles/${locale}`}
+                            title={translation?.title || 'Xəbər'}
                           />
                         </PermissionGate>
                       </div>

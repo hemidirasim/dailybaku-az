@@ -18,21 +18,44 @@ import {
 } from '@/components/ui/alert-dialog';
 
 interface DeleteButtonProps {
-  id: string;
-  endpoint: string;
+  // Yeni prop adları
+  id?: string;
+  endpoint?: string;
   redirectUrl: string;
-  title?: string; // Xəbər başlığı (opsional, popup-da göstərmək üçün)
+  title?: string;
+  // Köhnə prop adları (backward compatibility üçün)
+  itemId?: string;
+  apiPath?: string;
+  itemName?: string;
 }
 
-export default function DeleteButton({ id, endpoint, redirectUrl, title }: DeleteButtonProps) {
+export default function DeleteButton({ 
+  id, 
+  endpoint, 
+  redirectUrl, 
+  title,
+  // Köhnə prop adları
+  itemId,
+  apiPath,
+  itemName
+}: DeleteButtonProps) {
+  // Backward compatibility: köhnə prop adlarını yeni adlara çevir
+  const finalId = id || itemId || '';
+  const finalEndpoint = endpoint || apiPath || '';
+  const finalTitle = title || itemName;
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
   const handleDelete = async () => {
+    if (!finalEndpoint) {
+      toast.error('Endpoint təyin edilməyib');
+      return;
+    }
+    
     setLoading(true);
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(finalEndpoint, {
         method: 'DELETE',
       });
 
@@ -66,9 +89,9 @@ export default function DeleteButton({ id, endpoint, redirectUrl, title }: Delet
         <AlertDialogHeader>
           <AlertDialogTitle>Xəbəri silmək istədiyinizə əminsiniz?</AlertDialogTitle>
           <AlertDialogDescription>
-            {title ? (
+            {finalTitle ? (
               <>
-                <strong>"{title}"</strong> adlı xəbər silinəcək. Bu əməliyyat geri qaytarıla bilər.
+                <strong>"{finalTitle}"</strong> adlı xəbər silinəcək. Bu əməliyyat geri qaytarıla bilər.
               </>
             ) : (
               'Bu xəbər silinəcək. Bu əməliyyat geri qaytarıla bilər.'
