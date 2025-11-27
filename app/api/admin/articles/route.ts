@@ -31,7 +31,17 @@ export async function POST(req: NextRequest) {
         featured: featured || false,
         agenda: body.agenda || false,
         status: status || 'draft',
-        publishedAt: publishedAt ? new Date(publishedAt) : null,
+        publishedAt: publishedAt ? (() => {
+          // Local time istifadə et, timezone konvertasiyası olmadan
+          const dateStr = publishedAt as string;
+          if (dateStr.includes('T')) {
+            const [datePart, timePart] = dateStr.split('T');
+            const [year, month, day] = datePart.split('-').map(Number);
+            const [hours, minutes] = (timePart || '00:00').split(':').map(Number);
+            return new Date(year, month - 1, day, hours || 0, minutes || 0);
+          }
+          return new Date(publishedAt);
+        })() : null,
         translations: {
           create: [
             {

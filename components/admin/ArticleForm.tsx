@@ -299,7 +299,15 @@ export default function ArticleForm({ article, categories = [], users = [], defa
           agenda: article.agenda || false,
           status: article.status || 'draft',
           publishedAt: article.publishedAt
-            ? new Date(article.publishedAt).toISOString().slice(0, 16) // YYYY-MM-DDTHH:mm formatı
+            ? (() => {
+                const date = new Date(article.publishedAt);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+              })()
             : null,
           az: {
             title: article.translations.find((t) => t.locale === 'az')?.title || '',
@@ -320,7 +328,15 @@ export default function ArticleForm({ article, categories = [], users = [], defa
           featured: false,
           agenda: false,
           status: 'draft',
-          publishedAt: new Date().toISOString().slice(0, 16), // Cari tarix və saat
+          publishedAt: (() => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+          })(), // Cari tarix və saat (local time, timezone konvertasiyası olmadan)
           az: { title: '', slug: '', excerpt: '', content: '' },
           en: { title: '', slug: '', excerpt: '', content: '' },
         },
@@ -344,7 +360,7 @@ export default function ArticleForm({ article, categories = [], users = [], defa
     }
   }, [enTitle, article, setValue]);
 
-  // Tarix və saat dəyişdikdə publishedAt-i yenilə
+  // Tarix və saat dəyişdikdə publishedAt-i yenilə (timezone konvertasiyası olmadan)
   useEffect(() => {
     if (selectedDate) {
       const date = new Date(selectedDate);
@@ -352,7 +368,16 @@ export default function ArticleForm({ article, categories = [], users = [], defa
       date.setMinutes(parseInt(selectedTime.minutes) || 0);
       date.setSeconds(0);
       date.setMilliseconds(0);
-      setValue('publishedAt', date.toISOString().slice(0, 16));
+      
+      // Local time istifadə et, timezone konvertasiyası olmadan
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const localDateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+      
+      setValue('publishedAt', localDateTimeString);
     }
   }, [selectedDate, selectedTime, setValue]);
 
