@@ -100,13 +100,15 @@ export default function Header({
   };
 
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    // Loqoya klikləndikdə hər zaman saytı yenidən yüklə
+    // Loqoya klikləndikdə həmişə ana səhifəyə keç və yenidən yüklə
     e.preventDefault();
-    router.push(`/${locale}`);
-    router.refresh();
-    setTimeout(() => {
+    // Əgər artıq ana səhifədədirsə, yenidən yüklə
+    if (pathname === `/${locale}` || pathname === '/') {
       window.location.reload();
-    }, 100);
+    } else {
+      // Ana səhifəyə keç və yenidən yüklə
+      window.location.href = `/${locale}`;
+    }
   };
 
   // Life Style kateqoriyası üçün "LİFE" sözündəki "İ" hərfini "I" ilə əvəz et
@@ -129,6 +131,19 @@ export default function Header({
       searchInputRef.current.focus();
     }
   }, [searchOpen]);
+
+  // Mobile menu açılanda saytın yuxarısına scroll et
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      // Kiçik bir gecikmə ilə scroll et ki, menu render olsun
+      setTimeout(() => {
+        window.scrollTo({ 
+          top: 0, 
+          behavior: 'smooth' 
+        });
+      }, 100);
+    }
+  }, [mobileMenuOpen]);
 
   // Enter basıldıqda search səhifəsinə keçid
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

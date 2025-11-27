@@ -348,9 +348,9 @@ export default async function ArticlePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 print-area">
         <div className="grid grid-cols-1 lg:grid-cols-8 gap-8">
-          <article className="lg:col-span-5">
+          <article className="lg:col-span-5 print-article">
             {/* Print Logo and URL - Only visible when printing */}
             <div className="hidden text-center print-logo">
               <div

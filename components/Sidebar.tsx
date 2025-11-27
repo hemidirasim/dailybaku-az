@@ -79,7 +79,8 @@ export default function Sidebar({ recentArticles: initialArticles }: SidebarProp
     if (loadingRef.current || !hasMoreRef.current) return;
     
     loadingRef.current = true;
-    setLoading(true);
+    // Loading state-i gizlət - gözləmə olmadan yüklə
+    // setLoading(true);
     
     try {
       const currentOffset = offset;
@@ -101,7 +102,7 @@ export default function Sidebar({ recentArticles: initialArticles }: SidebarProp
       console.error('Error loading more articles:', error);
     } finally {
       loadingRef.current = false;
-      setLoading(false);
+      // setLoading(false);
     }
   }, [locale, offset]);
 
@@ -117,8 +118,8 @@ export default function Sidebar({ recentArticles: initialArticles }: SidebarProp
       const { scrollTop, scrollHeight, clientHeight } = container;
       const scrollBottom = scrollHeight - scrollTop - clientHeight;
       
-      // Əgər scroll bottom 300px-dən azdırsa, yüklə
-      if (scrollBottom < 300) {
+      // Əgər scroll bottom 500px-dən azdırsa, yüklə (daha tez preload)
+      if (scrollBottom < 500) {
         loadMoreArticles();
       }
     };
@@ -180,15 +181,9 @@ export default function Sidebar({ recentArticles: initialArticles }: SidebarProp
                 </div>
               </li>
             ))}
-            {/* Sentinel element for infinite scroll */}
+            {/* Sentinel element for infinite scroll - hidden, no loading indicator */}
             {hasMore && (
-              <li ref={sentinelRef} className="flex items-center justify-center py-4">
-                {loading && (
-                  <span className="text-xs text-muted-foreground">
-                    {locale === 'az' ? 'Yüklənir...' : 'Loading...'}
-                  </span>
-                )}
-              </li>
+              <li ref={sentinelRef} className="h-1" />
             )}
           </ul>
         </div>

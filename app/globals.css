@@ -234,7 +234,7 @@
 @media print {
   /* Remove page margins */
   @page {
-    margin: 0.5cm !important;
+    margin: 1cm !important;
     size: auto;
   }
 
@@ -253,6 +253,51 @@
     background: white !important;
     color: black !important;
     overflow: visible !important;
+  }
+
+  /* Print area - yalnız article content */
+  body > *:not(.print-area):not(script) {
+    display: none !important;
+  }
+
+  /* Print area container */
+  .print-area {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Container-ləri gizlət */
+  .min-h-screen {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+
+  /* Grid container-ləri gizlət */
+  .grid {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Sidebar və digər column-ları gizlət */
+  .lg\\:col-span-3,
+  aside,
+  .lg\\:col-span-1 {
+    display: none !important;
+  }
+
+  /* Article container - print area */
+  .print-article,
+  article {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page-break-inside: auto !important;
   }
 
   /* Boş div-ləri və container-ləri gizlət */
