@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Moon, Sun, X, Menu, Facebook, Twitter, Instagram, Youtube, ChevronDown } from 'lucide-react';
+import { Search, Moon, Sun, X, Menu, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -32,7 +32,6 @@ export default function Header({
 }) {
   const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Dark mode-u HTML elementinə tətbiq et
   useEffect(() => {
@@ -166,10 +165,10 @@ export default function Header({
               className="font-bold text-center dark:font-normal"
               style={{ fontFamily: 'Chomsky, serif', fontSize: '3.67rem' }}
             >
-              Daily Baku
+              The Daily Baku
               {locale === 'en' && (
-                <div className="text-sm font-normal" style={{ fontFamily: 'system-ui, sans-serif' }}>
-                  International
+                <div className="text-sm font-normal uppercase" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                  INTERNATIONAL
                 </div>
               )}
             </div>
@@ -206,8 +205,8 @@ export default function Header({
               >
                 Daily Baku
                 {locale === 'en' && (
-                  <div className="text-sm font-normal" style={{ fontFamily: 'system-ui, sans-serif' }}>
-                    International
+                  <div className="text-sm font-normal uppercase" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                    INTERNATIONAL
                   </div>
                 )}
               </div>
@@ -291,67 +290,6 @@ export default function Header({
         <div className="md:hidden bg-background border-b border-border">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex flex-col gap-3">
-              {/* Settings Collapse */}
-              <div>
-                <button
-                  onClick={() => setSettingsOpen(!settingsOpen)}
-                  className="flex items-center justify-between w-full text-sm font-medium hover:text-primary transition-colors"
-                >
-                  <span>{locale === 'az' ? 'Parametrlər' : 'Settings'}</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${settingsOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {settingsOpen && (
-                  <div className="mt-2 pl-4 space-y-3 border-l-2 border-border">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{locale === 'az' ? 'Dil:' : 'Language:'}</span>
-                      <Select value={locale} onValueChange={handleLanguageChange}>
-                        <SelectTrigger className="w-auto min-w-[70px] h-9 rounded-none border-none px-2 gap-1 !justify-start focus:ring-0 focus:ring-offset-0" style={{ border: 'none' }}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="en">EN</SelectItem>
-                          <SelectItem value="az">AZ</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{locale === 'az' ? 'Tema:' : 'Theme:'}</span>
-                      <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
-                        {darkMode ? (
-                          <Sun className="h-5 w-5" />
-                        ) : (
-                          <Moon className="h-5 w-5" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2 pt-2 border-t">
-                <span className="text-sm font-medium">{locale === 'az' ? 'Sosial şəbəkələr:' : 'Social networks:'}</span>
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" asChild>
-                    <Link href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
-                      <Facebook className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" asChild>
-                    <Link href="https://www.twitter.com" target="_blank" rel="noopener noreferrer">
-                      <Twitter className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" asChild>
-                    <Link href="https://www.instagram.com" target="_blank" rel="noopener noreferrer">
-                      <Instagram className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" asChild>
-                    <Link href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">
-                      <Youtube className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
               <Link href={`/${locale}`} className="text-sm font-medium hover:text-primary transition-colors">
                 {locale === 'az' ? 'Ana Səhifə' : 'Home'}
               </Link>
@@ -363,7 +301,7 @@ export default function Header({
                 <Link
                   key={menu.id}
                   href={menu.url}
-                  className="hover:text-primary transition-colors capitalize text-sm font-medium"
+                  className="hover:text-primary transition-colors capitalize text-base font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {formatMenuTitle(menu.title)}
@@ -373,14 +311,14 @@ export default function Header({
               <>
                 <Link
                   href={`/${locale}`}
-                  className="hover:text-primary transition-colors capitalize text-sm font-medium"
+                  className="hover:text-primary transition-colors capitalize text-base font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {locale === 'az' ? 'Ana Səhifə' : 'Home'}
                 </Link>
                 <Link
                   href={`/${locale}/category/gundem`}
-                  className="hover:text-primary transition-colors capitalize text-sm font-medium"
+                  className="hover:text-primary transition-colors capitalize text-base font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {locale === 'az' ? 'Gündəm' : 'Agenda'}
@@ -394,7 +332,7 @@ export default function Header({
 
       {/* Desktop Navigation - Sticky */}
       <nav
-        className="hidden md:flex items-center justify-center gap-6 text-sm font-medium sticky top-0 z-50 bg-background border-b border-border py-2"
+        className="hidden md:flex items-center justify-center gap-6 text-base font-medium sticky top-0 z-50 bg-background border-b border-border py-2"
         lang={locale}
       >
         <div className="max-w-7xl mx-auto px-4 w-full flex items-center justify-between">

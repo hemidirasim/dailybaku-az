@@ -29,7 +29,7 @@ interface MenuItem {
 const translations = {
   az: {
     aboutUs: 'Haqqımızda',
-    aboutUsText: 'Daily Baku - Azərbaycanın ən etibarlı xəbər mənbəsi. Gündəlik xəbərlər, analitik materiallar və aktuallıqla sizə çatırıq.',
+    aboutUsText: 'The Daily Baku - Azərbaycanın ən etibarlı xəbər mənbəsi. Gündəlik xəbərlər, analitik materiallar və aktuallıqla sizə çatırıq.',
     aboutUsLink: '→ Haqqımızda',
     contact: 'Əlaqə',
     contactLink: '→ Əlaqə',
@@ -45,7 +45,7 @@ const translations = {
   },
   en: {
     aboutUs: 'About Us',
-    aboutUsText: 'Daily Baku - Azerbaijan most reliable news source. We bring you daily news, analytical materials and current events.',
+    aboutUsText: 'The Daily Baku - Azerbaijan most reliable news source. We bring you daily news, analytical materials and current events.',
     aboutUsLink: '→ About Us',
     contact: 'Contact',
     contactLink: '→ Contact',
@@ -148,7 +148,7 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Logo */}
             <div>
-              <h3 className="text-lg font-bold mb-4">Daily Baku</h3>
+              <h3 className="text-lg font-bold mb-4">The Daily Baku</h3>
               <p className="text-sm text-gray-300 mb-4 leading-relaxed">
                 {t.aboutUsText}
               </p>
@@ -210,11 +210,11 @@ export default function Footer({ menus = [], locale: propLocale }: FooterProps) 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-sm text-gray-300">
-            Daily Baku
+            The Daily Baku
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-300">
-              © {new Date().getFullYear()} - Daily Baku. {t.allRightsReserved}
+              © {new Date().getFullYear()} - The Daily Baku. {t.allRightsReserved}
             </span>
             <span className="text-sm text-gray-300">
               {locale === 'az' ? 'Hazırladı' : 'Created by'}{' '}

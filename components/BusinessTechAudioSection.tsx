@@ -90,6 +90,9 @@ export default function BusinessTechAudioSection() {
                   <h3 className="text-sm font-bold text-foreground leading-snug group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors font-serif line-clamp-2">
                     {article.title}
                   </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                    {article.excerpt || article.title.substring(0, 80) + '...'}
+                  </p>
                   <div className="text-xs text-muted-foreground uppercase tracking-wide">
                     {locale === 'az' ? '25 dəq dinlə' : '25 MIN LISTEN'}
                   </div>

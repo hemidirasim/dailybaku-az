@@ -234,8 +234,13 @@
 @media print {
   /* Remove page margins */
   @page {
-    margin: 0 !important;
-    padding: 0 !important;
+    margin: 0.5cm !important;
+    size: auto;
+  }
+
+  /* Boş səhifələri gizlət */
+  @page :blank {
+    display: none;
   }
 
   /* Remove all margins and padding from root elements */
@@ -243,87 +248,164 @@
     margin: 0 !important;
     padding: 0 !important;
     height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    background: white !important;
+    color: black !important;
+    overflow: visible !important;
   }
 
-  /* Gizlət: Header, Footer, Sidebar, Advertisement, Share buttons və digər elementlər */
-  header,
-  footer,
-  aside,
-  nav,
-  .lg\\:col-span-1,
-  [class*="Advertisement"],
-  [class*="ShareButtons"],
-  [class*="ArticleGallery"],
-  [class*="TopArticles"],
-  [class*="HeaderNews"],
-  .no-print,
-  /* Category badge */
-  [class*="Badge"],
-  /* Date/time info */
-  .flex.items-center.gap-6:not(.print-date),
-  /* Excerpt */
-  .text-xl.text-muted-foreground,
-  /* Share buttons section */
-  .mt-8.pt-6.border-t {
+  /* Boş div-ləri və container-ləri gizlət */
+  body > *:empty {
     display: none !important;
   }
 
-  /* Print logo - Show only when printing */
-  article .print-logo {
-    display: block !important;
-    margin-top: 0 !important;
-    margin-bottom: 0.5rem !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    border-bottom: none !important;
-    text-align: center !important;
-    page-break-after: avoid !important;
+  /* Article-dan sonra boş yerləri təmizlə */
+  article + * {
+    page-break-before: auto !important;
   }
 
-  /* Body və əsas container */
-  body {
-    background: white !important;
-    color: black !important;
+  /* Gizlət: Header, Footer, Sidebar, Navigation */
+  header,
+  footer,
+  aside,
+  nav {
+    display: none !important;
   }
 
-  /* Article container */
-  .max-w-7xl {
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
+  /* Gizlət: .no-print class-ı olan elementlər */
+  .no-print {
+    display: none !important;
   }
 
-  /* Main container */
+  /* Gizlət: Advertisement, Buttons, Badges */
+  button,
+  [class*="Advertisement"],
+  [class*="Badge"],
+  .text-xl.text-muted-foreground {
+    display: none !important;
+  }
+
+  /* Gizlət: Sidebar (lg:col-span-1) */
+  .lg\\:col-span-1 {
+    display: none !important;
+  }
+
+  /* Containerləri təmizlə */
+  .max-w-7xl,
   .min-h-screen {
     margin: 0 !important;
     padding: 0 !important;
+    max-width: 100% !important;
+    background: white !important;
+    height: auto !important;
     min-height: auto !important;
   }
 
-  /* Grid layout-u təmizlə */
+  /* Grid-dən sonra gələn bütün elementləri gizlət */
+  .grid + *,
+  article + * {
+    display: none !important;
+  }
+
+  /* Article-dan sonra boş yerləri təmizlə */
+  article ~ * {
+    page-break-before: auto !important;
+  }
+
+  /* Grid-i block et */
   .grid {
     display: block !important;
     margin: 0 !important;
     padding: 0 !important;
   }
 
-  /* Yalnız article məzmununu göstər */
+  /* Article-i göstər */
   article {
+    display: block !important;
     width: 100% !important;
-    max-width: 100% !important;
     margin: 0 !important;
-    padding: 10px 20px !important;
-    page-break-inside: avoid;
+    padding: 0 !important;
+    page-break-after: auto !important;
+    orphans: 3 !important;
+    widows: 3 !important;
+  }
+
+  /* Article-dan sonra boş səhifəni gizlət */
+  article::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  /* Body-dən sonra boş səhifəni gizlət */
+  body::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  /* Prose-dan sonra boş yerləri təmizlə */
+  article .prose::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  /* Print logo və URL - göstər */
+  .print-logo {
+    display: block !important;
+    margin-bottom: 1rem !important;
+    padding-bottom: 0.5rem !important;
+    border-bottom: 1px solid #000 !important;
+    text-align: center !important;
+  }
+
+  .print-url {
+    display: block !important;
+    color: #000 !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Print copyright - göstər */
+  .print-copyright {
+    display: block !important;
+    margin-top: 2rem !important;
+    padding-top: 1rem !important;
+    border-top: 1px solid #000 !important;
     page-break-before: auto !important;
+  }
+
+  .print-copyright p {
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: center !important;
+    color: #000 !important;
+    font-size: 0.75rem !important;
   }
 
   /* Article başlığı */
   article h1 {
     font-size: 2rem !important;
-    margin-top: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+    padding: 0 !important;
     color: black !important;
     page-break-after: avoid !important;
+    font-weight: bold !important;
+  }
+
+  /* Print date - Show only when printing */
+  article .print-date {
+    display: flex !important;
+    color: #000 !important;
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.5rem !important;
+    padding: 0 !important;
+    font-size: 0.875rem !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Hide calendar icon in print */
+  article .print-date svg {
+    display: none !important;
   }
 
   /* Şəkilləri çap üçün optimallaşdır */
@@ -331,13 +413,64 @@
     max-width: 100% !important;
     height: auto !important;
     page-break-inside: avoid;
-    margin: 1rem 0 !important;
+    margin: 0.5rem 0 !important;
+    padding: 0 !important;
+    display: block !important;
   }
 
-  /* Mətn rənglərini qara et */
+  /* Image container */
+  article .relative.w-full {
+    position: static !important;
+    height: auto !important;
+    margin: 0.5rem 0 !important;
+    padding: 0 !important;
+  }
+
+  article .relative.w-full.h-\\[500px\\] {
+    height: auto !important;
+  }
+
+  article .relative.w-full img {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
+
+  /* Mətn rənglərini qara et və margin/padding-ləri azalt */
   article * {
     color: #000 !important;
     background: transparent !important;
+  }
+
+  /* Bütün div-lərin padding və margin-lərini azalt */
+  article div:not(.print-logo):not(.print-url):not(.print-date) {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Yalnız lazımi elementlərə margin ver */
+  article .print-logo {
+    margin-bottom: 0.5rem !important;
+    padding-bottom: 0.25rem !important;
+  }
+
+  article h1 {
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  article .print-date {
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  article .relative.w-full {
+    margin: 0.5rem 0 !important;
+  }
+
+  article .prose p {
+    margin: 0.5rem 0 !important;
   }
 
   /* Linkləri qara et və alt xətt çək */
@@ -350,10 +483,29 @@
   article .prose {
     max-width: 100% !important;
     color: #000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   article .prose * {
     color: #000 !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  article .prose p:first-child {
+    margin-top: 0 !important;
+  }
+
+  article .prose p:last-child {
+    margin-bottom: 0 !important;
+    page-break-after: auto !important;
+  }
+
+  /* Son elementdən sonra boş səhifəni gizlət */
+  article .prose > *:last-child {
+    page-break-after: auto !important;
+    margin-bottom: 0 !important;
   }
 
   /* Page break-ləri əlavə et */
@@ -365,16 +517,14 @@
     page-break-inside: avoid;
   }
 
-  /* Image container */
-  article .relative.w-full {
-    position: static !important;
-    height: auto !important;
-  }
-
-  article .relative.w-full img {
-    position: static !important;
-    width: 100% !important;
-    height: auto !important;
+  /* Boş səhifələri tamamilə gizlət */
+  @page :blank {
+    @top-center {
+      content: none;
+    }
+    @bottom-center {
+      content: none;
+    }
   }
 }
 

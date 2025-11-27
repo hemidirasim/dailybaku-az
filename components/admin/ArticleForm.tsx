@@ -20,11 +20,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import Image from 'next/image';
-import { X, Upload, Image as ImageIcon, Plus, Check, ChevronsUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { X, Upload, Image as ImageIcon, Plus, Check, ChevronsUpDown, ArrowUp, ArrowDown, CalendarIcon, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Calendar } from '@/components/ui/calendar';
 import { cn, generateSlug } from '@/lib/utils';
+import { format } from 'date-fns';
+import { az } from 'date-fns/locale';
 import dynamic from 'next/dynamic';
 
 // Quill editor-u dinamik import ilə yüklə (SSR problemi üçün)
@@ -112,11 +115,12 @@ interface ArticleFormProps {
   }>;
   users?: ArticleUser[];
   defaultAuthorId?: string | null;
+  defaultLocale?: 'az' | 'en';
 }
 
 const fallbackSlug = (locale: string) => `${locale}-${Date.now()}`;
 
-export default function ArticleForm({ article, categories = [], users = [], defaultAuthorId }: ArticleFormProps) {
+export default function ArticleForm({ article, categories = [], users = [], defaultAuthorId, defaultLocale = 'az' }: ArticleFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -172,6 +176,38 @@ export default function ArticleForm({ article, categories = [], users = [], defa
     }>;
   }>>([]);
   const [selectedGalleryTemplate, setSelectedGalleryTemplate] = useState<string | null>(null);
+  
+  // Active tab state
+  const [activeTab, setActiveTab] = useState<'az' | 'en'>(defaultLocale);
+  
+  // defaultLocale dəyişdikdə activeTab-i yenilə
+  useEffect(() => {
+    setActiveTab(defaultLocale);
+  }, [defaultLocale]);
+  
+  // Tarix və saat üçün state-lər
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => {
+    if (article?.publishedAt) {
+      const date = new Date(article.publishedAt);
+      return date;
+    }
+    return new Date();
+  });
+  const [selectedTime, setSelectedTime] = useState<{ hours: string; minutes: string }>(() => {
+    if (article?.publishedAt) {
+      const date = new Date(article.publishedAt);
+      return {
+        hours: String(date.getHours()).padStart(2, '0'),
+        minutes: String(date.getMinutes()).padStart(2, '0'),
+      };
+    }
+    const now = new Date();
+    return {
+      hours: String(now.getHours()).padStart(2, '0'),
+      minutes: String(now.getMinutes()).padStart(2, '0'),
+    };
+  });
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   useEffect(() => {
     if (categories.length === 0) {
@@ -307,6 +343,18 @@ export default function ArticleForm({ article, categories = [], users = [], defa
       setValue('en.slug', autoSlug);
     }
   }, [enTitle, article, setValue]);
+
+  // Tarix və saat dəyişdikdə publishedAt-i yenilə
+  useEffect(() => {
+    if (selectedDate) {
+      const date = new Date(selectedDate);
+      date.setHours(parseInt(selectedTime.hours) || 0);
+      date.setMinutes(parseInt(selectedTime.minutes) || 0);
+      date.setSeconds(0);
+      date.setMilliseconds(0);
+      setValue('publishedAt', date.toISOString().slice(0, 16));
+    }
+  }, [selectedDate, selectedTime, setValue]);
 
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -543,7 +591,7 @@ export default function ArticleForm({ article, categories = [], users = [], defa
               <CardTitle>Başlıq və Məzmun</CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="az" className="w-full">
+              <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'az' | 'en')} className="w-full">
                 <TabsList>
                   <TabsTrigger value="az">Azərbaycan</TabsTrigger>
                   <TabsTrigger value="en">English</TabsTrigger>
@@ -1003,11 +1051,100 @@ export default function ArticleForm({ article, categories = [], users = [], defa
               <CardTitle>Şəkil və Tarix</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="publishedAt">Nəşr Tarixi</Label>
+              <div className="space-y-4">
+                <div>
+                  <Label>Tarix</Label>
+                  <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !selectedDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDate ? format(selectedDate, "PPP", { locale: az }) : "Tarix seçin"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => {
+                          setSelectedDate(date);
+                          setDatePickerOpen(false);
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label>Saat</Label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-1">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="23"
+                        value={selectedTime.hours}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 23)) {
+                            setSelectedTime({ ...selectedTime, hours: value.padStart(2, '0') });
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = e.target.value;
+                          if (value === '') {
+                            setSelectedTime({ ...selectedTime, hours: '00' });
+                          } else {
+                            const num = parseInt(value);
+                            if (num < 0) setSelectedTime({ ...selectedTime, hours: '00' });
+                            else if (num > 23) setSelectedTime({ ...selectedTime, hours: '23' });
+                            else setSelectedTime({ ...selectedTime, hours: String(num).padStart(2, '0') });
+                          }
+                        }}
+                        className="w-20"
+                        placeholder="00"
+                      />
+                      <span className="text-lg font-semibold">:</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={selectedTime.minutes}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 59)) {
+                            setSelectedTime({ ...selectedTime, minutes: value.padStart(2, '0') });
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = e.target.value;
+                          if (value === '') {
+                            setSelectedTime({ ...selectedTime, minutes: '00' });
+                          } else {
+                            const num = parseInt(value);
+                            if (num < 0) setSelectedTime({ ...selectedTime, minutes: '00' });
+                            else if (num > 59) setSelectedTime({ ...selectedTime, minutes: '59' });
+                            else setSelectedTime({ ...selectedTime, minutes: String(num).padStart(2, '0') });
+                          }
+                        }}
+                        className="w-20"
+                        placeholder="00"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      <span>{selectedTime.hours}:{selectedTime.minutes}</span>
+                    </div>
+                  </div>
+                </div>
                 <Input
                   id="publishedAt"
-                  type="datetime-local"
+                  type="hidden"
                   {...register('publishedAt')}
                 />
               </div>

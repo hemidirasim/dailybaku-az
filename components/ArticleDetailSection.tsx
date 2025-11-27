@@ -81,14 +81,22 @@ export default function ArticleDetailSection() {
                 <div key={article.slug || index} className="border-b border-gray-200 pb-4 last:border-b-0">
                   {article.slug ? (
                     <Link href={`/${locale}/article/${article.slug}`}>
-                      <h3 className="text-sm font-bold text-foreground leading-tight hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                      <h3 className="text-sm font-bold text-foreground leading-tight hover:text-red-600 dark:hover:text-red-400 transition-colors mb-2">
                         {article.title}
                       </h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                        {article.excerpt || article.title.substring(0, 80) + '...'}
+                      </p>
                     </Link>
                   ) : (
-                    <h3 className="text-sm font-bold text-foreground leading-tight">
-                      {article.title}
-                    </h3>
+                    <>
+                      <h3 className="text-sm font-bold text-foreground leading-tight mb-2">
+                        {article.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                        {article.excerpt || article.title.substring(0, 80) + '...'}
+                      </p>
+                    </>
                   )}
                 </div>
               ))
@@ -125,11 +133,9 @@ export default function ArticleDetailSection() {
                   </h1>
                 )}
 
-                {heroArticle.excerpt && (
-                  <p className="text-muted-foreground mb-4 leading-relaxed">
-                    {heroArticle.excerpt}
-                  </p>
-                )}
+                <p className="text-muted-foreground mb-4 leading-relaxed">
+                  {heroArticle.excerpt || heroArticle.title.substring(0, 150) + '...'}
+                </p>
 
                 {/* Two Articles Below Main Article */}
                 {bottomArticles.length > 0 && (
@@ -157,11 +163,9 @@ export default function ArticleDetailSection() {
                               {article.title}
                             </h2>
                           )}
-                          {article.excerpt && (
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                              {article.excerpt}
-                            </p>
-                          )}
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {article.excerpt || article.title.substring(0, 100) + '...'}
+                          </p>
                         </div>
                       );
                     })}
@@ -202,11 +206,9 @@ export default function ArticleDetailSection() {
                   </h2>
                 )}
 
-                {sideArticle1.excerpt && (
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                    {sideArticle1.excerpt}
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                  {sideArticle1.excerpt || sideArticle1.title.substring(0, 100) + '...'}
+                </p>
 
                 {sideArticle1.published_at && (
                   <p className="text-xs text-muted-foreground mb-4">
@@ -245,11 +247,9 @@ export default function ArticleDetailSection() {
                   </h2>
                 )}
 
-                {sideArticle2.excerpt && (
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                    {sideArticle2.excerpt}
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                  {sideArticle2.excerpt || sideArticle2.title.substring(0, 100) + '...'}
+                </p>
 
                 {sideArticle2.published_at && (
                   <p className="text-xs text-muted-foreground mb-4">

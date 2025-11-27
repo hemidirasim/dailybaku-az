@@ -95,50 +95,91 @@ async function getArticle(slug: string, locale: string) {
 }
 
 async function getRecentArticles(locale: string) {
-  const articles = await prisma.article.findMany({
-    where: {
-      status: 'published',
-      deletedAt: null,
-      OR: [
-        { publishedAt: null },
-        { publishedAt: { lte: new Date() } }
-      ],
-    },
-    include: {
-      translations: true,
-      images: {
-        where: {
-          isPrimary: true,
-        },
-        take: 1,
+  try {
+    // Əvvəlcə agenda=true olan xəbərləri gətir
+    const agendaArticles = await prisma.article.findMany({
+      where: {
+        agenda: true,
+        status: 'published',
+        deletedAt: null,
+        OR: [
+          { publishedAt: null },
+          { publishedAt: { lte: new Date() } }
+        ],
       },
-    },
-    orderBy: {
-      publishedAt: 'desc',
-    },
-    take: 10, // Daha çox götür ki, title-i olmayanları filter etdikdən sonra kifayət qədər olsun
-  });
+      include: {
+        translations: true,
+        images: {
+          where: {
+            isPrimary: true,
+          },
+          take: 1,
+        },
+      },
+      orderBy: {
+        publishedAt: { sort: 'desc', nulls: 'last' }
+      },
+      take: 10,
+    });
 
-  return articles
-    .map((article: typeof articles[0]) => {
-      const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
-      
-      // Əgər translation yoxdursa və ya title boşdursa, null qaytar
-      if (!translation || !translation.title || translation.title.trim() === '') {
-        return null;
-      }
-      
-      return {
-        id: article.id,
-        title: translation.title,
-        slug: translation.slug || '',
-        excerpt: translation.excerpt || '',
-        image_url: article.images[0]?.url || null,
-        published_at: article.publishedAt,
-      };
-    })
-    .filter((article): article is NonNullable<typeof article> => article !== null)
-    .slice(0, 5); // Son 5 qədər götür
+    // Əgər agenda xəbərləri kifayət etmirsə, digər xəbərləri də gətir
+    const remainingLimit = 5 - agendaArticles.length;
+    let otherArticles: typeof agendaArticles = [];
+    
+    if (remainingLimit > 0) {
+      otherArticles = await prisma.article.findMany({
+        where: {
+          agenda: false,
+          status: 'published',
+          deletedAt: null,
+          OR: [
+            { publishedAt: null },
+            { publishedAt: { lte: new Date() } }
+          ],
+        },
+        include: {
+          translations: true,
+          images: {
+            where: {
+              isPrimary: true,
+            },
+            take: 1,
+          },
+        },
+        orderBy: {
+          publishedAt: { sort: 'desc', nulls: 'last' }
+        },
+        take: remainingLimit * 2,
+      });
+    }
+
+    // Birləşdir: əvvəlcə agenda xəbərləri, sonra digərləri
+    const articles = [...agendaArticles, ...otherArticles];
+
+    return articles
+      .map((article: typeof articles[0]) => {
+        const translation = article.translations.find((t: { locale: string }) => t.locale === locale);
+        
+        // Əgər translation yoxdursa və ya title boşdursa, null qaytar
+        if (!translation || !translation.title || translation.title.trim() === '') {
+          return null;
+        }
+        
+        return {
+          id: article.id,
+          title: translation.title,
+          slug: translation.slug || '',
+          excerpt: translation.excerpt || '',
+          image_url: article.images[0]?.url || null,
+          published_at: article.publishedAt,
+        };
+      })
+      .filter((article): article is NonNullable<typeof article> => article !== null)
+      .slice(0, 5); // Son 5 qədər götür
+  } catch (error) {
+    console.error('Error fetching recent articles:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata({
@@ -294,15 +335,15 @@ export default async function ArticlePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <article className="lg:col-span-2">
-            {/* Print Logo - Only visible when printing */}
+        <div className="grid grid-cols-1 lg:grid-cols-8 gap-8">
+          <article className="lg:col-span-5">
+            {/* Print Logo and URL - Only visible when printing */}
             <div className="hidden text-center print-logo">
               <div
-                className="font-bold text-center dark:font-normal"
+                className="font-bold text-center dark:font-normal mb-2"
                 style={{ fontFamily: 'Chomsky, serif', fontSize: '2.5rem' }}
               >
-                Daily Baku
+                The Daily Baku
                 {locale === 'en' && (
                   <div className="text-sm font-normal" style={{ fontFamily: 'system-ui, sans-serif' }}>
                     International
@@ -385,6 +426,17 @@ export default async function ArticlePage({
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
 
+            {/* Print Copyright - Only visible when printing */}
+            <div className="hidden print-copyright mt-8 pt-4 border-t border-gray-300">
+              <p className="text-xs text-gray-600 text-center" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                © {new Date().getFullYear()} The Daily Baku. {locale === 'az' ? 'Bütün hüquqlar qorunur.' : 'All rights reserved.'}
+              </p>
+              {/* Print URL - Copyright-dan aşağıda */}
+              <div className="text-xs text-gray-600 print-url text-center mt-2" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                {articleUrl}
+              </div>
+            </div>
+
             {/* Şəkil Qalereyası - Content-dən sonra */}
             {article.images && article.images.length > 1 && (
               <ArticleGallery images={article.images} title={article.title} className="no-print" />
@@ -401,7 +453,7 @@ export default async function ArticlePage({
             <Advertisement position="article-bottom" locale={locale} className="no-print" />
           </article>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-3">
             <Sidebar recentArticles={recentArticles} />
           </div>
         </div>

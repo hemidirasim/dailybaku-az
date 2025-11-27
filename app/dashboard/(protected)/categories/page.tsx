@@ -19,7 +19,7 @@ async function CategoriesPageContent() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">Bölmələr</h1>
-        <Link href="/admin/categories/new">
+        <Link href="/dashboard/categories/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             Yeni Bölmə
@@ -57,7 +57,7 @@ async function CategoriesPageContent() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
-                      <Link href={`/admin/categories/${category.id}/edit`}>
+                      <Link href={`/dashboard/categories/${category.id}/edit`}>
                         <Button variant="outline" size="sm">
                           <Edit className="h-4 w-4 mr-1" />
                           Redaktə

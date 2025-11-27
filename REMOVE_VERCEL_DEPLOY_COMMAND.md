@@ -42,3 +42,6 @@ Next.js layihələri üçün Vercel avtomatik olaraq build və deploy edir. Əla
 
 Əgər Cloudflare Pages-də deploy etmək istəyirsinizsə, Vercel-də deploy command-i silmək lazım deyil - sadəcə Cloudflare Pages-də yeni bir project yaradın.
 
+
+
+

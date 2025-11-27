@@ -123,3 +123,6 @@ assignArticlesToMultimedia()
     process.exit(1);
   });
 
+
+
+

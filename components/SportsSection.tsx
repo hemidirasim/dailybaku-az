@@ -140,11 +140,9 @@ export default function SportsSection() {
               <h3 className="text-2xl font-bold mb-3 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors text-foreground">
                 {heroArticle.title}
               </h3>
-              {heroArticle.excerpt && (
-                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                  {heroArticle.excerpt}
-                </p>
-              )}
+              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                {heroArticle.excerpt || heroArticle.title.substring(0, 100) + '...'}
+              </p>
               {heroArticle.published_at && (
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Clock className="h-3 w-3" />
@@ -166,6 +164,9 @@ export default function SportsSection() {
               <h4 className="text-base font-bold mb-1 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors text-foreground">
                 {article.title}
               </h4>
+              <p className="text-sm text-muted-foreground mb-1.5 line-clamp-2">
+                {article.excerpt || article.title.substring(0, 100) + '...'}
+              </p>
               {article.published_at && (
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Clock className="h-3 w-3" />

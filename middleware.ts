@@ -4,8 +4,16 @@ import { NextResponse } from 'next/server';
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
-    const isAdminRoute = req.nextUrl.pathname.startsWith('/dashboard');
-    const isLoginPage = req.nextUrl.pathname === '/dashboard/login';
+    const pathname = req.nextUrl.pathname;
+    const isAdminRoute = pathname.startsWith('/dashboard');
+    const isOldAdminRoute = pathname.startsWith('/admin');
+    const isLoginPage = pathname === '/dashboard/login';
+
+    // Redirect old /admin routes to /dashboard
+    if (isOldAdminRoute) {
+      const newPath = pathname.replace('/admin', '/dashboard');
+      return NextResponse.redirect(new URL(newPath, req.url));
+    }
 
     // Allow login page
     if (isLoginPage) {
@@ -28,8 +36,10 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        const isAdminRoute = req.nextUrl.pathname.startsWith('/dashboard');
-        const isLoginPage = req.nextUrl.pathname === '/dashboard/login';
+        const pathname = req.nextUrl.pathname;
+        const isAdminRoute = pathname.startsWith('/dashboard');
+        const isOldAdminRoute = pathname.startsWith('/admin');
+        const isLoginPage = pathname === '/dashboard/login';
 
         if (isLoginPage) {
           return true;
@@ -37,7 +47,7 @@ export default withAuth(
 
         // Allow any authenticated user with a role to access admin panel
         // Modify this to restrict to specific roles if needed
-        if (isAdminRoute) {
+        if (isAdminRoute || isOldAdminRoute) {
           return !!token && !!(token as any).role;
         }
 
@@ -48,5 +58,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: ['/dashboard/:path*', '/admin/:path*'],
 };

@@ -63,6 +63,14 @@ export const metadata: Metadata = {
       'en-US': `${process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az'}/en`,
     },
   },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', type: 'image/x-icon' },
+      { url: '/favicon.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/favicon.png',
+  },
   verification: {
     // Google Search Console və digər verification kodları buraya əlavə edilə bilər
     // google: 'verification-code',
@@ -79,6 +87,9 @@ export default function RootLayout({
     <html lang="az" suppressHydrationWarning>
       <head>
         <link href="https://fonts.cdnfonts.com/css/chomsky" rel="stylesheet" />
+        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
       </head>
       <body className={inter.className}>
         <Providers>

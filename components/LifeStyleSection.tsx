@@ -122,6 +122,11 @@ export default function LifeStyleSection() {
               {article.title}
             </h3>
 
+            {/* Excerpt */}
+            <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+              {article.excerpt || article.title.substring(0, 100) + '...'}
+            </p>
+
             {/* Read Time / Date */}
             {article.published_at && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">

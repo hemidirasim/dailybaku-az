@@ -162,3 +162,6 @@ Hər bir environment üçün variable-ları ayrıca təyin edin.
 - [Next.js on Cloudflare Pages](https://developers.cloudflare.com/pages/framework-guides/nextjs/)
 - [Environment Variables](https://developers.cloudflare.com/pages/platform/build-configuration/#environment-variables)
 
+
+
+

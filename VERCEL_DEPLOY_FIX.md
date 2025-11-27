@@ -39,3 +39,6 @@ Next.js layihələri üçün Vercel avtomatik olaraq build və deploy edir. Əla
 
 Bu fayl artıq mövcuddur və düzgün konfiqurasiya edilmişdir.
 
+
+
+

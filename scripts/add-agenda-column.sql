@@ -2,3 +2,6 @@
 ALTER TABLE articles 
 ADD COLUMN IF NOT EXISTS agenda BOOLEAN DEFAULT false;
 
+
+
+

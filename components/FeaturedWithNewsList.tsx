@@ -145,9 +145,9 @@ export default function FeaturedWithNewsList() {
   return (
     <div className="border-b border-border pb-6 bg-background" data-testid="featured-with-news-list">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-8 gap-6">
           {/* Sol tərəf - 2 div: Manşet və Yeni Blok */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-5 space-y-6">
             {/* Div 1: Manşet Slider */}
             <div className="relative">
               {displayFeatured.length > 0 ? (
@@ -155,7 +155,7 @@ export default function FeaturedWithNewsList() {
                   <div className="overflow-hidden rounded-lg relative">
                     <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
                       {displayFeatured.map((article: any) => (
-                        <div key={article.id} className="flex-[0_0_100%] min-w-0 relative h-[500px]">
+                        <div key={article.id} className="flex-[0_0_100%] min-w-0 relative h-[350px]">
                           <Link
                             href={article.slug ? `/${locale}/article/${article.slug}` : '#'}
                             className="group block relative h-full w-full overflow-hidden rounded-lg"
@@ -171,9 +171,9 @@ export default function FeaturedWithNewsList() {
                               <h2 className="text-3xl font-bold mb-2 group-hover:text-red-600 transition-colors">
                                 {article.title}
                               </h2>
-                              {article.excerpt && (
-                                <p className="text-gray-200 mb-2">{article.excerpt}</p>
-                              )}
+                              <p className="text-gray-200 mb-2">
+                                {article.excerpt || article.title.substring(0, 150) + '...'}
+                              </p>
                               {mounted && article.published_at && (
                                 <div className="flex items-center gap-2 text-sm text-gray-300">
                                   <span>
@@ -243,11 +243,9 @@ export default function FeaturedWithNewsList() {
                       <h3 className="text-lg font-bold leading-tight group-hover:text-red-600 transition-colors">
                         {article.title}
                       </h3>
-                      {article.excerpt && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {article.excerpt}
-                        </p>
-                      )}
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {article.excerpt || article.title.substring(0, 100) + '...'}
+                      </p>
                       {article.published_at && mounted && (
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(article.published_at), 'HH:mm', { locale: locale === 'az' ? azLocale : enUS })}
@@ -264,7 +262,7 @@ export default function FeaturedWithNewsList() {
           </div>
 
           {/* Sağ tərəf - 1 div: Xəbər lenti və Biznes xəbərləri */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-3">
             <Sidebar recentArticles={recentArticles} />
             <BusinessNewsSection />
           </div>

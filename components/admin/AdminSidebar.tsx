@@ -73,7 +73,7 @@ export default function AdminSidebar() {
     <div className="w-64 bg-gray-900 text-white min-h-screen flex flex-col">
       <div className="p-6 border-b border-gray-800">
         <Link href="/" className="block">
-          <h1 className="text-xl font-bold hover:text-gray-300 transition-colors">Daily Baku</h1>
+          <h1 className="text-xl font-bold hover:text-gray-300 transition-colors">The Daily Baku</h1>
         </Link>
         <p className="text-sm text-gray-400 mb-3">Admin Panel</p>
         <a 

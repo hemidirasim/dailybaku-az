@@ -216,6 +216,9 @@ export default function WorldReportSection() {
                     <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight font-serif group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
                       {mainArticle.title}
                     </h1>
+                    <p className="text-sm text-muted-foreground mb-3 leading-relaxed line-clamp-2">
+                      {mainArticle.excerpt || mainArticle.title.substring(0, 150) + '...'}
+                    </p>
                   </Link>
                 ) : (
                   <>
@@ -233,13 +236,10 @@ export default function WorldReportSection() {
                     <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight font-serif">
                       {mainArticle.title}
                     </h1>
+                    <p className="text-sm text-muted-foreground mb-3 leading-relaxed line-clamp-2">
+                      {mainArticle.excerpt || mainArticle.title.substring(0, 150) + '...'}
+                    </p>
                   </>
-                )}
-
-                {mainArticle.excerpt && (
-                  <p className="text-sm text-muted-foreground mb-3 leading-relaxed line-clamp-2">
-                    {mainArticle.excerpt}
-                  </p>
                 )}
 
                 {mainArticle.published_at && mounted && (
@@ -273,6 +273,9 @@ export default function WorldReportSection() {
                                   <h3 className="text-sm font-bold text-foreground leading-snug mb-1.5 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors font-serif line-clamp-2">
                                     {article.title}
                                   </h3>
+                                  <p className="text-xs text-muted-foreground leading-relaxed mb-1.5 line-clamp-2">
+                                    {article.excerpt || article.title.substring(0, 80) + '...'}
+                                  </p>
                                   {article.published_at && mounted && (
                                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                       <Clock className="h-3 w-3" />
@@ -299,6 +302,9 @@ export default function WorldReportSection() {
                                 <h3 className="text-sm font-bold text-foreground leading-snug mb-1.5 font-serif line-clamp-2">
                                   {article.title}
                                 </h3>
+                                <p className="text-xs text-muted-foreground leading-relaxed mb-1.5 line-clamp-2">
+                                  {article.excerpt || article.title.substring(0, 80) + '...'}
+                                </p>
                                 {article.published_at && mounted && (
                                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                     <Clock className="h-3 w-3" />
@@ -345,11 +351,9 @@ export default function WorldReportSection() {
                           {article.title}
                         </h3>
                       )}
-                      {article.excerpt && (
-                        <p className="text-xs text-muted-foreground leading-relaxed mb-1.5 line-clamp-2">
-                          {article.excerpt}
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-1.5 line-clamp-2">
+                        {article.excerpt || article.title.substring(0, 80) + '...'}
+                      </p>
                       {article.published_at && mounted && (
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
@@ -386,11 +390,9 @@ export default function WorldReportSection() {
                           {article.title}
                         </h3>
                       )}
-                      {article.excerpt && (
-                        <p className="text-xs text-muted-foreground leading-relaxed mb-1.5 line-clamp-2">
-                          {article.excerpt}
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-1.5 line-clamp-2">
+                        {article.excerpt || article.title.substring(0, 80) + '...'}
+                      </p>
                       {article.published_at && mounted && (
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
@@ -427,11 +429,9 @@ export default function WorldReportSection() {
                           {article.title}
                         </h3>
                       )}
-                      {article.excerpt && (
-                        <p className="text-xs text-muted-foreground leading-relaxed mb-1.5 line-clamp-2">
-                          {article.excerpt}
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-1.5 line-clamp-2">
+                        {article.excerpt || article.title.substring(0, 80) + '...'}
+                      </p>
                       {article.published_at && mounted && (
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />

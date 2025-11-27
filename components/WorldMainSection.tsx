@@ -147,6 +147,9 @@ export default function WorldMainSection() {
                       <h4 className="text-sm font-bold text-foreground leading-snug mb-1 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors line-clamp-2">
                         {article.title}
                       </h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-1.5 line-clamp-2">
+                        {article.excerpt || article.title.substring(0, 80) + '...'}
+                      </p>
                       {article.published_at && (
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
@@ -187,6 +190,9 @@ export default function WorldMainSection() {
                   <h3 className="text-base font-bold text-foreground leading-snug mb-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors font-serif">
                     {article.title}
                   </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-2 line-clamp-2">
+                    {article.excerpt || article.title.substring(0, 100) + '...'}
+                  </p>
                   {article.published_at && (
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />

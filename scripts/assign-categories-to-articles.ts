@@ -202,3 +202,6 @@ assignCategoriesToArticles()
     process.exit(1);
   });
 
+
+
+

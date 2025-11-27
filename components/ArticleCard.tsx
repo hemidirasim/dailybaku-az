@@ -110,6 +110,9 @@ export default function ArticleCard({
         <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors leading-tight">
           {article.title}
         </h3>
+        <p className="text-sm text-muted-foreground mb-2 leading-relaxed line-clamp-2">
+          {article.excerpt || article.title.substring(0, 100) + '...'}
+        </p>
         {article.published_at && mounted && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="h-3 w-3" />

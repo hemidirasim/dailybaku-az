@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 async function getTopArticles(offset: number = 0, locale: string = 'az') {
@@ -26,15 +25,21 @@ async function getTopArticles(offset: number = 0, locale: string = 'az') {
 }
 
 export default function TopArticles({ offset = 0 }: { offset?: number }) {
-  const pathname = usePathname();
   const [articles, setArticles] = useState<any[]>([]);
   const [locale, setLocale] = useState('az');
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pathname, setPathname] = useState<string>('');
 
   useEffect(() => {
+    // Client-side only
+    if (typeof window === 'undefined') return;
+    
     setMounted(true);
-    const segments = pathname.split('/');
+    const currentPathname = window.location.pathname;
+    setPathname(currentPathname);
+    
+    const segments = currentPathname.split('/');
     const currentLocale = segments[1] === 'en' ? 'en' : 'az';
     setLocale(currentLocale);
     setLoading(true);
@@ -47,17 +52,20 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
       console.error('TopArticles - Error:', error);
       setLoading(false);
     });
-  }, [pathname, offset]);
+  }, [offset]);
 
   // Don't render until mounted (client-side only)
-  if (!mounted) {
+  if (!mounted || typeof window === 'undefined') {
     return null;
   }
+
+  // Check if current page is an article page
+  const isArticlePage = pathname.includes('/article/');
 
   // Show loading state
   if (loading) {
     return (
-      <div className="border-b border-border pb-4 md:pb-6">
+      <div className={`border-b border-border pb-4 md:pb-6 ${isArticlePage ? 'lg:block hidden' : ''}`}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-0">
             {[1, 2, 3, 4].map((i) => (
@@ -85,7 +93,7 @@ export default function TopArticles({ offset = 0 }: { offset?: number }) {
   }));
 
   return (
-    <div className="border-b border-border pb-4 md:pb-6">
+    <div className={`border-b border-border pb-4 md:pb-6 ${isArticlePage ? 'lg:block hidden' : ''}`}>
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-0">
           {displayArticles.map((article, index) => (

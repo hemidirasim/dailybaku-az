@@ -144,7 +144,7 @@ async function ArticlesContent({
           <h1 className="text-3xl font-bold">Xəbərlər</h1>
           <div className="flex items-center gap-2">
             <Link
-              href="/admin/articles/az"
+              href="/dashboard/articles/az"
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 locale === 'az'
                   ? 'bg-red-600 text-white'
@@ -157,7 +157,7 @@ async function ArticlesContent({
               }).length})
             </Link>
             <Link
-              href="/admin/articles/en"
+              href="/dashboard/articles/en"
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 locale === 'en'
                   ? 'bg-red-600 text-white'
@@ -172,7 +172,7 @@ async function ArticlesContent({
           </div>
         </div>
         <PermissionGate permission="articles.create" showWhileLoading={true}>
-          <Link href="/admin/articles/new">
+          <Link href={`/dashboard/articles/${locale}/new`}>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               Yeni Xəbər
@@ -262,7 +262,7 @@ async function ArticlesContent({
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <PermissionGate permission="articles.edit" showWhileLoading={true}>
-                          <Link href={`/admin/articles/edit/${article.id}`}>
+                          <Link href={`/dashboard/articles/edit/${article.id}`}>
                             <Button variant="outline" size="sm">
                               <Edit className="h-4 w-4 mr-1" />
                               Redaktə
