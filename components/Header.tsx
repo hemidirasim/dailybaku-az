@@ -203,7 +203,7 @@ export default function Header({
                 className="font-bold text-center dark:font-normal"
                 style={{ fontFamily: 'Chomsky, serif', fontSize: '3rem' }}
               >
-                Daily Baku
+                The Daily Baku
                 {locale === 'en' && (
                   <div className="text-sm font-normal uppercase" style={{ fontFamily: 'system-ui, sans-serif' }}>
                     INTERNATIONAL

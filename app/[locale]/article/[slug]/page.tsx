@@ -292,9 +292,15 @@ export default async function ArticlePage({
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az';
   const articleUrl = `${baseUrl}/${locale}/article/${article.slug}`;
-  const imageUrl = article.image_url 
-    ? (article.image_url.startsWith('http') ? article.image_url : `${baseUrl}${article.image_url}`)
-    : `${baseUrl}/og-image.jpg`;
+  
+  // Helper function to normalize image URLs
+  const normalizeImageUrl = (url: string | null | undefined): string => {
+    if (!url) return `${baseUrl}/og-image.jpg`;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return url.startsWith('/') ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
+  };
+  
+  const imageUrl = normalizeImageUrl(article.image_url);
 
   // JSON-LD Structured Data
   const jsonLd = {
@@ -374,46 +380,52 @@ export default async function ArticlePage({
               )}
             </div>
 
-            <h1 className="text-4xl font-bold mb-4 leading-tight">
-              {article.title}
-            </h1>
-
-            <div className="flex items-center gap-6 text-sm text-muted-foreground mb-6 print-date">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 print:hidden" />
-                <span>
-                  {article.published_at
-                    ? new Date(article.published_at).toLocaleDateString(locale === 'az' ? 'az-AZ' : 'en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })
-                    : ''}
-                </span>
+            {/* Title, Date və Foto - Grid Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Sol tərəf - Title və Tarix */}
+              <div className="flex flex-col justify-center">
+                <h1 className="text-2xl font-bold mb-4 leading-tight">
+                  {article.title}
+                </h1>
+                <div className="flex items-center gap-6 text-sm text-muted-foreground print-date">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 print:hidden" />
+                    <span>
+                      {article.published_at
+                        ? new Date(article.published_at).toLocaleDateString(locale === 'az' ? 'az-AZ' : 'en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })
+                        : ''}
+                    </span>
+                  </div>
+                  {article.published_at && (
+                    <div className="flex items-center gap-2">
+                      <span>
+                        {new Date(article.published_at).toLocaleTimeString(locale === 'az' ? 'az-AZ' : 'en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-              {article.published_at && (
-                <div className="flex items-center gap-2">
-                  <span>
-                    {new Date(article.published_at).toLocaleTimeString(locale === 'az' ? 'az-AZ' : 'en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
+
+              {/* Sağ tərəf - Foto */}
+              {article.image_url && (
+                <div className="relative w-full h-[250px] md:h-[300px] rounded-lg overflow-hidden">
+                  <Image
+                    src={normalizeImageUrl(article.image_url)}
+                    alt={article.title}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
                 </div>
               )}
             </div>
-
-            {article.image_url && (
-              <div className="relative w-full h-[500px] mb-8 rounded-lg overflow-hidden">
-                <Image
-                  src={article.image_url}
-                  alt={article.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-            )}
 
             {article.excerpt && (
               <p className="text-xl text-muted-foreground mb-6 leading-relaxed no-print">

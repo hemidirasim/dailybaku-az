@@ -9,6 +9,14 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import BusinessNewsSection from '@/components/BusinessNewsSection';
 
+// Helper function to normalize image URLs
+function normalizeImageUrl(url: string | null | undefined): string {
+  if (!url) return 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az';
+  return url.startsWith('/') ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
+}
+
 async function getFeaturedArticles(locale: string = 'az', limit: number = 20) {
   try {
     const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || 'https://dailybaku.az');
@@ -22,7 +30,7 @@ async function getFeaturedArticles(locale: string = 'az', limit: number = 20) {
     const articles = await response.json();
     return articles.map((article: any, index: number) => ({
       ...article,
-      image_url: article.image_url || article.image || article.imageUrl || `https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800`,
+      image_url: normalizeImageUrl(article.image_url || article.image || article.imageUrl),
     }));
   } catch (error) {
     console.error('Error fetching featured articles:', error);
@@ -155,27 +163,25 @@ export default function FeaturedWithNewsList() {
                   <div className="overflow-hidden rounded-lg relative">
                     <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
                       {displayFeatured.map((article: any) => (
-                        <div key={article.id} className="flex-[0_0_100%] min-w-0 relative h-[350px]">
+                        <div key={article.id} className="flex-[0_0_100%] min-w-0">
                           <Link
                             href={article.slug ? `/${locale}/article/${article.slug}` : '#'}
-                            className="group block relative h-full w-full overflow-hidden rounded-lg"
+                            className="group block"
                           >
-                            <img
-                              src={article.image_url || article.image || article.imageUrl || 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                              alt={article.title}
-                              className="object-cover transition-transform group-hover:scale-105 w-full h-full"
-                              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                              <h2 className="text-3xl font-bold mb-2 group-hover:text-red-600 transition-colors">
+                            <div className="relative h-[350px] overflow-hidden rounded-lg mb-4">
+                              <img
+                                src={normalizeImageUrl(article.image_url || article.image || article.imageUrl)}
+                                alt={article.title}
+                                className="object-cover transition-transform group-hover:scale-105 w-full h-full"
+                                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                              />
+                            </div>
+                            <div className="px-2">
+                              <h2 className="text-3xl font-bold mb-2 group-hover:text-red-600 transition-colors text-foreground">
                                 {article.title}
                               </h2>
-                              <p className="text-gray-200 mb-2">
-                                {article.excerpt || article.title.substring(0, 150) + '...'}
-                              </p>
                               {mounted && article.published_at && (
-                                <div className="flex items-center gap-2 text-sm text-gray-300">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                   <span>
                                     {format(new Date(article.published_at), 'HH:mm', { locale: locale === 'az' ? azLocale : enUS })}
                                   </span>
