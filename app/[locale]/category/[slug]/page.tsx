@@ -76,16 +76,15 @@ async function getCategoryArticles(categoryId: string, locale: string) {
 
 async function getRecentArticles(locale: string) {
   try {
-    // Əvvəlcə agenda=true olan xəbərləri gətir
-    const agendaArticles = await prisma.article.findMany({
+    // Son əlavə edilən xəbərləri gətir - kateqoriyası nə olursa olsun
+    // Yalnız tarix və saatı mövcud saatdan kiçik olanlar
+    const articles = await prisma.article.findMany({
       where: {
-        agenda: true,
         status: 'published',
         deletedAt: null,
-        OR: [
-          { publishedAt: null },
-          { publishedAt: { lte: new Date() } }
-        ],
+        publishedAt: {
+          lte: new Date() // Yalnız mövcud saatdan kiçik və ya bərabər olanlar
+        },
       },
       include: {
         translations: true,
@@ -97,44 +96,10 @@ async function getRecentArticles(locale: string) {
         },
       },
       orderBy: {
-        publishedAt: { sort: 'desc', nulls: 'last' }
+        publishedAt: 'desc' // Ən son əlavə edilənlər əvvəl
       },
-      take: 10,
+      take: 10, // Daha çox gətir ki, translation filterindən sonra kifayət qalsın
     });
-
-    // Əgər agenda xəbərləri kifayət etmirsə, digər xəbərləri də gətir
-    const remainingLimit = 5 - agendaArticles.length;
-    let otherArticles: typeof agendaArticles = [];
-    
-    if (remainingLimit > 0) {
-      otherArticles = await prisma.article.findMany({
-        where: {
-          agenda: false,
-          status: 'published',
-          deletedAt: null,
-          OR: [
-            { publishedAt: null },
-            { publishedAt: { lte: new Date() } }
-          ],
-        },
-        include: {
-          translations: true,
-          images: {
-            where: {
-              isPrimary: true,
-            },
-            take: 1,
-          },
-        },
-        orderBy: {
-          publishedAt: { sort: 'desc', nulls: 'last' }
-        },
-        take: remainingLimit * 2,
-      });
-    }
-
-    // Birləşdir: əvvəlcə agenda xəbərləri, sonra digərləri
-    const articles = [...agendaArticles, ...otherArticles];
 
     return articles
       .map((article: typeof articles[0]) => {
