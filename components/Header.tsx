@@ -99,6 +99,16 @@ export default function Header({
     router.refresh();
   };
 
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Loqoya klikləndikdə hər zaman saytı yenidən yüklə
+    e.preventDefault();
+    router.push(`/${locale}`);
+    router.refresh();
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  };
+
   // Life Style kateqoriyası üçün "LİFE" sözündəki "İ" hərfini "I" ilə əvəz et
   const formatMenuTitle = (title: string) => {
     // Life Style kateqoriyasını müəyyən et (hər hansı bir variantda)
@@ -160,7 +170,7 @@ export default function Header({
             </Button>
           </div>
 
-          <Link href={`/${locale}`} className="flex-shrink-0">
+          <Link href={`/${locale}`} className="flex-shrink-0" onClick={handleLogoClick}>
             <div
               className="font-bold text-center dark:font-normal"
               style={{ fontFamily: 'Chomsky, serif', fontSize: '3.67rem' }}
@@ -198,7 +208,7 @@ export default function Header({
         <div className="flex md:hidden flex-col gap-3">
           {/* Top row: Logo */}
           <div className="flex justify-center">
-            <Link href={`/${locale}`} className="flex justify-center">
+            <Link href={`/${locale}`} className="flex justify-center" onClick={handleLogoClick}>
               <div
                 className="font-bold text-center dark:font-normal"
                 style={{ fontFamily: 'Chomsky, serif', fontSize: '3rem' }}

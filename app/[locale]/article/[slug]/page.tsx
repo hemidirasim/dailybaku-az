@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { notFound, redirect } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, User, Eye, Edit } from 'lucide-react';
@@ -13,6 +14,13 @@ import ShareButtons from '@/components/ShareButtons';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import type { Metadata } from 'next';
+
+const ArticleImageClient = dynamic(() => import('@/components/ArticleImage'), {
+  ssr: false,
+  loading: () => (
+    <div className="relative w-full h-[250px] md:h-[300px] rounded-lg overflow-hidden bg-gray-200 animate-pulse" />
+  ),
+});
 
 async function getArticle(slug: string, locale: string) {
   // Əvvəlcə bu slug ilə hər hansı bir translation-da article axtaraq
@@ -415,15 +423,10 @@ export default async function ArticlePage({
 
               {/* Sağ tərəf - Foto */}
               {article.image_url && (
-                <div className="relative w-full h-[250px] md:h-[300px] rounded-lg overflow-hidden">
-                  <Image
-                    src={normalizeImageUrl(article.image_url)}
-                    alt={article.title}
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                </div>
+                <ArticleImageClient
+                  imageUrl={normalizeImageUrl(article.image_url)}
+                  alt={article.title}
+                />
               )}
             </div>
 

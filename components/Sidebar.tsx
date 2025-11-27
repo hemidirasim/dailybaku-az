@@ -46,6 +46,8 @@ export default function Sidebar({ recentArticles: initialArticles }: SidebarProp
   const sentinelRef = useRef<HTMLLIElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [pathname, setPathname] = useState<string>('');
+  const loadingRef = useRef(false);
+  const hasMoreRef = useRef(true);
 
   const locale = useMemo(() => {
     if (typeof window === 'undefined' || !pathname) return 'az';
@@ -66,15 +68,25 @@ export default function Sidebar({ recentArticles: initialArticles }: SidebarProp
     setOffset(initialArticles.length);
   }, [initialArticles]);
 
+  // Loading və hasMore ref-lərini update et
+  useEffect(() => {
+    loadingRef.current = loading;
+    hasMoreRef.current = hasMore;
+  }, [loading, hasMore]);
+
   // Daha çox xəbər yüklə
   const loadMoreArticles = useCallback(async () => {
-    if (loading || !hasMore) return;
+    if (loadingRef.current || !hasMoreRef.current) return;
     
+    loadingRef.current = true;
     setLoading(true);
+    
     try {
-      const newArticles = await getMoreArticles(locale, offset, 10);
+      const currentOffset = offset;
+      const newArticles = await getMoreArticles(locale, currentOffset, 10);
       
       if (newArticles.length === 0) {
+        hasMoreRef.current = false;
         setHasMore(false);
       } else {
         setArticles(prev => {
@@ -83,38 +95,40 @@ export default function Sidebar({ recentArticles: initialArticles }: SidebarProp
           const uniqueNewArticles = newArticles.filter((a: RecentArticle) => !existingIds.has(a.id));
           return [...prev, ...uniqueNewArticles];
         });
-        setOffset(prev => prev + newArticles.length);
+        setOffset(currentOffset + newArticles.length);
       }
     } catch (error) {
       console.error('Error loading more articles:', error);
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  }, [locale, offset, loading, hasMore]);
+  }, [locale, offset]);
 
-  // IntersectionObserver ilə scroll-u izlə
+  // Scroll event listener ilə scroll-u izlə
   useEffect(() => {
-    if (!sentinelRef.current || !hasMore || loading) return;
+    if (!scrollContainerRef.current || !mounted) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          loadMoreArticles();
-        }
-      },
-      {
-        root: scrollContainerRef.current,
-        rootMargin: '100px',
-        threshold: 0.1,
+    const container = scrollContainerRef.current;
+    
+    const handleScroll = () => {
+      if (loadingRef.current || !hasMoreRef.current) return;
+      
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const scrollBottom = scrollHeight - scrollTop - clientHeight;
+      
+      // Əgər scroll bottom 300px-dən azdırsa, yüklə
+      if (scrollBottom < 300) {
+        loadMoreArticles();
       }
-    );
+    };
 
-    observer.observe(sentinelRef.current);
+    container.addEventListener('scroll', handleScroll);
 
     return () => {
-      observer.disconnect();
+      container.removeEventListener('scroll', handleScroll);
     };
-  }, [hasMore, loading, loadMoreArticles]);
+  }, [loadMoreArticles, mounted]);
 
   return (
     <aside className="space-y-8">
